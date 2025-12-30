@@ -1,0 +1,31 @@
+# Default python-proxy configuration
+# Configured for realmo.com.local proxying by default
+#
+# Quick start:
+# 1. Add to /etc/hosts: 127.0.0.1 realmo.com.local
+# 2. Run: python-proxy --config config.yaml
+# 3. Browse to: http://realmo.com.local
+#
+# See examples/REALMO_SETUP.md for detailed setup guide
+
+# Bind to all interfaces on port 80 for seamless local browsing
+host: "0.0.0.0"
+port: 80
+
+# Logging level: DEBUG, INFO, WARNING, ERROR
+log_level: "INFO"
+
+# Request timeout in seconds
+timeout: 30
+
+# Hook mappings - organize hooks by hostname using includes
+hook_mappings:
+  post_hooks:
+    # Enable realmo.com.local proxying with automatic link rewriting
+    # This is enabled by default for easy local development
+    - hostname: "realmo.com.local"
+      include: "examples/hooks/realmo.com.local-post.yaml"
+
+    # Add more hostnames here as needed:
+    # - hostname: "other-site.local"
+    #   include: "examples/hooks/other-site.local-post.yaml"

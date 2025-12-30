@@ -52,6 +52,30 @@ python-proxy --target http://example.com
 python-proxy --config config.yaml
 ```
 
+### Quick Start with realmo.com.local (Default Configuration)
+
+The default `config.yaml` is pre-configured for proxying realmo.com locally with automatic link rewriting:
+
+```bash
+# 1. Add to /etc/hosts
+echo "127.0.0.1 realmo.com.local" | sudo tee -a /etc/hosts
+
+# 2. Set up port 80 capability (one-time)
+./scripts/setup_port80.sh
+
+# 3. Start proxy with default config
+python-proxy --config config.yaml
+
+# 4. Browse to http://realmo.com.local
+```
+
+**What this does:**
+- Proxies `realmo.com.local` → `realmo.com:80`
+- Automatically rewrites all `realmo.com` links to `realmo.com.local`
+- Keeps all traffic flowing through the proxy for testing/development
+
+See [examples/REALMO_SETUP.md](examples/REALMO_SETUP.md) for detailed guide and customization options.
+
 ### Running on Port 80 (Privileged Port)
 
 **Quick Install (Recommended):**

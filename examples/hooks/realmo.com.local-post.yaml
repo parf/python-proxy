@@ -1,0 +1,48 @@
+# Post-hooks for realmo.com.local
+# Rewrites all realmo.com links to realmo.com.local to keep traffic in proxy
+#
+# This file is included by default in config files to enable automatic
+# link rewriting for local development with realmo.com
+#
+# Setup:
+# 1. Add to /etc/hosts: 127.0.0.1 realmo.com.local
+# 2. Start proxy on port 80
+# 3. Browse to http://realmo.com.local
+#
+# See examples/REALMO_SETUP.md for complete guide
+
+# CRITICAL: Rewrite all realmo.com links to realmo.com.local
+# This ensures all links, images, scripts, etc. continue through the proxy
+- url_pattern: "/*"
+  hook: "link_rewrite"
+  params:
+    from_domain: "realmo.com"
+    to_domain: "realmo.com.local"
+    # Rewrite in all these HTML attributes
+    attributes: ["href", "src", "action", "data", "poster", "srcset"]
+    case_sensitive: false
+
+# Optional: Add development banner (uncomment to enable)
+# - url_pattern: "/*.html"
+#   hook: "html_rewrite"
+#   params:
+#     xpath: "//body"
+#     action: "insert_before"
+#     value: |
+#       <div style="position: fixed; top: 0; left: 0; right: 0;
+#                   background: #ff6b6b; color: white; padding: 5px;
+#                   text-align: center; z-index: 999999; font-size: 14px;">
+#         🔧 Development Mode - realmo.com.local
+#       </div>
+
+# Optional: Inject custom JavaScript for local development (uncomment to enable)
+# - url_pattern: "/*.html"
+#   hook: "html_rewrite"
+#   params:
+#     xpath: "//head"
+#     action: "insert_before"
+#     value: |
+#       <script>
+#       console.log('Python-proxy active - realmo.com.local');
+#       // Add any custom JavaScript here for local testing
+#       </script>
