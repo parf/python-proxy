@@ -1,0 +1,22 @@
+# Example configuration file for python-proxy
+# Save as config.yaml and run with: python-proxy --config config.yaml
+
+# Host to bind the proxy server to
+host: "0.0.0.0"
+
+# Port to bind the proxy server to
+port: 8080
+
+# Default target host for proxying
+# If not set, clients must specify target using X-Proxy-Target header
+target_host: "http://example.com"
+
+# Request timeout in seconds
+timeout: 30
+
+# Directory containing hook modules
+# All .py files in this directory will be loaded
+hooks_dir: "./hooks"
+
+# Logging level: DEBUG, INFO, WARNING, ERROR
+log_level: "INFO"

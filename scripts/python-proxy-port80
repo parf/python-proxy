@@ -1,0 +1,9 @@
+#!/bin/bash
+# Wrapper script to run python-proxy on port 80
+# This script itself can have capabilities set
+
+# Find Python
+PYTHON="${PYTHON:-python3}"
+
+# Run python-proxy with all arguments passed through
+exec "$PYTHON" -m python_proxy.cli "$@"

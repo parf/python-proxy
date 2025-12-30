@@ -1,0 +1,16 @@
+[Unit]
+Description=Python Proxy Socket
+PartOf=python-proxy.service
+
+[Socket]
+# Bind to specific IP and port 80
+ListenStream=192.168.2.7:80
+
+# Or bind to all interfaces
+#ListenStream=0.0.0.0:80
+
+# Accept incoming connections
+Accept=false
+
+[Install]
+WantedBy=sockets.target
