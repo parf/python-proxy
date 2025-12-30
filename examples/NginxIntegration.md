@@ -26,11 +26,16 @@ Client → Nginx → Python-Proxy (with hooks) → Backend Server
    # Ubuntu/Debian
    sudo apt-get install nginx
 
-   # CentOS/RHEL
-   sudo yum install nginx
+   # CentOS/RHEL/Fedora
+   sudo dnf install nginx
    ```
 
 ## Basic Configuration
+
+**Note:** In all examples below, `python-proxy-ip:8080` should be replaced with:
+- `localhost:8080` if python-proxy runs on the same server as nginx
+- `192.168.1.100:8080` (or actual IP) if python-proxy runs on a different server
+- `python-proxy.local:8080` (or hostname) if using DNS/hosts file
 
 ### Example 1: Proxy Entire Site Through Python-Proxy
 
@@ -44,7 +49,7 @@ server {
 
     location / {
         # Proxy to python-proxy
-        proxy_pass http://localhost:8080;
+        proxy_pass http://python-proxy-ip:8080;
 
         # Set backend server using X-Proxy-Server header
         proxy_set_header X-Proxy-Server backend.example.com;
@@ -77,7 +82,7 @@ server {
 
     # Only proxy /api/* through python-proxy for modification
     location /api/ {
-        proxy_pass http://localhost:8080;
+        proxy_pass http://python-proxy-ip:8080;
         proxy_set_header X-Proxy-Server api-backend.example.com;
         proxy_set_header Host $host;
     }
@@ -90,7 +95,7 @@ server {
 
     # Everything else also goes through python-proxy
     location / {
-        proxy_pass http://localhost:8080;
+        proxy_pass http://python-proxy-ip:8080;
         proxy_set_header X-Proxy-Server backend.example.com;
         proxy_set_header Host $host;
     }
@@ -108,7 +113,7 @@ server {
     server_name example.com;
 
     location / {
-        proxy_pass http://localhost:8080;
+        proxy_pass http://python-proxy-ip:8080;
 
         # Full URL including scheme
         proxy_set_header X-Proxy-Target https://secure-backend.example.com;
@@ -133,28 +138,28 @@ server {
 
     # API requests go to API backend
     location /api/ {
-        proxy_pass http://localhost:8080;
+        proxy_pass http://python-proxy-ip:8080;
         proxy_set_header X-Proxy-Server api.backend.local:8000;
         proxy_set_header Host $host;
     }
 
     # Blog requests go to WordPress backend
     location /blog/ {
-        proxy_pass http://localhost:8080;
+        proxy_pass http://python-proxy-ip:8080;
         proxy_set_header X-Proxy-Server wordpress.backend.local;
         proxy_set_header Host $host;
     }
 
     # Admin panel goes to admin backend with HTTPS
     location /admin/ {
-        proxy_pass http://localhost:8080;
+        proxy_pass http://python-proxy-ip:8080;
         proxy_set_header X-Proxy-Target https://admin.backend.local;
         proxy_set_header Host $host;
     }
 
     # Everything else
     location / {
-        proxy_pass http://localhost:8080;
+        proxy_pass http://python-proxy-ip:8080;
         proxy_set_header X-Proxy-Server main.backend.local;
         proxy_set_header Host $host;
     }
@@ -179,7 +184,7 @@ server {
     server_name example.com;
 
     location / {
-        proxy_pass http://localhost:8080;
+        proxy_pass http://python-proxy-ip:8080;
         proxy_set_header X-Proxy-Server $backend_server;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -199,7 +204,7 @@ server {
     server_name public.example.com;
 
     location / {
-        proxy_pass http://localhost:8080;
+        proxy_pass http://python-proxy-ip:8080;
 
         # Backend server is an IP
         proxy_set_header X-Proxy-Server 192.168.1.100:8080;
@@ -302,7 +307,7 @@ server {
     server_name myapp.local;
 
     location / {
-        proxy_pass http://localhost:8080;
+        proxy_pass http://python-proxy-ip:8080;
         # Python-proxy will strip .local and forward to production
         proxy_set_header Host myapp.local;
     }
@@ -324,7 +329,7 @@ server {
     server_name example.com;
 
     location / {
-        proxy_pass http://localhost:8080;
+        proxy_pass http://python-proxy-ip:8080;
         proxy_set_header X-Proxy-Server backend.example.com;
         proxy_set_header Host $host;
     }
@@ -355,7 +360,7 @@ server {
     server_name api.example.com;
 
     location / {
-        proxy_pass http://localhost:8080;
+        proxy_pass http://python-proxy-ip:8080;
         proxy_set_header X-Proxy-Server api-backend.example.com;
     }
 }
@@ -386,7 +391,7 @@ server {
 
     # Static site
     location / {
-        proxy_pass http://localhost:8080;
+        proxy_pass http://python-proxy-ip:8080;
         proxy_set_header X-Proxy-Server static.backend.local;
     }
 }
@@ -424,7 +429,7 @@ server {
     server_name *.example.com;
 
     location / {
-        proxy_pass http://localhost:8080;
+        proxy_pass http://python-proxy-ip:8080;
         proxy_set_header X-Proxy-Server $backend_server;
         proxy_set_header Host $host;
     }
@@ -445,7 +450,7 @@ server {
     server_name example.com;
 
     location / {
-        proxy_pass http://localhost:8080;
+        proxy_pass http://python-proxy-ip:8080;
         proxy_set_header X-Proxy-Server backend.example.com;
 
         # Cache responses from python-proxy
@@ -494,7 +499,7 @@ server {
     access_log /var/log/nginx/access.log combined;
 
     location / {
-        proxy_pass http://localhost:8080;
+        proxy_pass http://python-proxy-ip:8080;
         proxy_set_header X-Proxy-Server backend.example.com;
 
         # Log headers
@@ -557,7 +562,7 @@ server {
         # Set your own backend
         proxy_set_header X-Proxy-Server backend.example.com;
 
-        proxy_pass http://localhost:8080;
+        proxy_pass http://python-proxy-ip:8080;
     }
 }
 ```
@@ -576,7 +581,7 @@ server {
 
     location / {
         # Nginx handles HTTPS, forwards HTTP to python-proxy
-        proxy_pass http://localhost:8080;
+        proxy_pass http://python-proxy-ip:8080;
         proxy_set_header X-Proxy-Server backend.example.com;
         proxy_set_header X-Forwarded-Proto $scheme;
     }

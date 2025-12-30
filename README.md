@@ -199,6 +199,17 @@ hook_mappings:
 
 See [examples/HOOKS.md](examples/HOOKS.md) for complete documentation and [examples/config_with_hooks.yaml](examples/config_with_hooks.yaml) for a working example.
 
+### Nginx Integration
+
+Use python-proxy with nginx as a frontend reverse proxy for production deployments. Nginx handles SSL termination and load balancing, while python-proxy provides powerful hook-based content modification.
+
+See [examples/NginxIntegration.md](examples/NginxIntegration.md) for complete nginx configuration examples including:
+- Proxy entire site or specific paths through python-proxy
+- Dynamic backend routing based on URL patterns
+- Load balancing with multiple python-proxy instances
+- Production-ready setup with SSL/TLS
+- Performance optimization and security best practices
+
 ## Creating Custom Python Hooks
 
 For advanced use cases, you can write custom Python hooks. Place them in a hooks directory.
