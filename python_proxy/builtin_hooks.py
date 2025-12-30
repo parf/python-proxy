@@ -535,23 +535,23 @@ async def link_rewrite(
                 target_protocol_http = "http" if force_http else "http"
                 target_protocol_https = "http" if force_http else "https"
 
-                # Replace protocol-relative URLs
+                # Replace protocol-relative URLs (use word boundary to avoid double replacement)
                 new_value = re.sub(
-                    f"//({from_escaped})",
+                    f"//({from_escaped})(?![a-zA-Z0-9.-])",
                     f"//{to_domain}",
                     new_value,
                     flags=flags,
                 )
-                # Replace http URLs
+                # Replace http URLs (use word boundary to avoid double replacement)
                 new_value = re.sub(
-                    f"http://({from_escaped})",
+                    f"http://({from_escaped})(?![a-zA-Z0-9.-])",
                     f"{target_protocol_http}://{to_domain}",
                     new_value,
                     flags=flags,
                 )
-                # Replace https URLs
+                # Replace https URLs (use word boundary to avoid double replacement)
                 new_value = re.sub(
-                    f"https://({from_escaped})",
+                    f"https://({from_escaped})(?![a-zA-Z0-9.-])",
                     f"{target_protocol_https}://{to_domain}",
                     new_value,
                     flags=flags,
