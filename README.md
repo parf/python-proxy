@@ -1,30 +1,101 @@
-# python-proxy
+# 🚀 python-proxy
 
-**A powerful, transparent HTTP proxy server with intelligent traffic modification capabilities.**
+> **A powerful, transparent HTTP proxy server with intelligent traffic modification capabilities.**
 
-## Overview
+<div align="center">
 
-Python-proxy is a high-performance, asynchronous HTTP proxy server built on `aiohttp` that sits between clients and backend servers, allowing you to intercept, inspect, and modify HTTP traffic in real-time. Unlike traditional proxies that simply forward traffic, python-proxy provides a sophisticated hook system that enables you to transform requests and responses on-the-fly, making it an essential tool for development, testing, security analysis, and production deployments.
+```
+┌─────────────┐      ┌──────────────────┐      ┌─────────────┐
+│   Client    │ ───▶ │  Python-Proxy    │ ───▶ │   Backend   │
+│  (Browser)  │      │  ⚡ Transform     │      │   Server    │
+│             │ ◀─── │  🔧 Modify        │ ◀─── │             │
+└─────────────┘      │  🎯 Route         │      └─────────────┘
+                     └──────────────────┘
+```
 
-Think of it as nginx with superpowers - you get the reliability and performance of a production-grade proxy, combined with the flexibility to programmatically modify any aspect of HTTP traffic. Whether you need to add authentication headers, inject analytics scripts into web pages, mock API responses for testing, rewrite URLs, sanitize sensitive data, or implement custom routing logic, python-proxy makes it simple through either configuration files or custom Python code.
+**nginx with superpowers** • **Zero-code configuration** • **Production-ready**
 
-The project is designed with developer experience in mind. You can start with zero-code configuration using built-in YAML hooks for common tasks like redirects, text replacement, and HTML modifications. When you need more power, the Python hook system gives you complete control with full access to request/response data, allowing you to implement complex logic like rate limiting, caching, A/B testing, or integration with external APIs. The async architecture ensures your modifications don't compromise performance, handling thousands of concurrent connections efficiently.
+</div>
 
-Python-proxy excels in scenarios where you need to manipulate HTTP traffic without modifying the backend or client applications. Use it during development to test how your application handles different API responses, in QA environments to inject test data or simulate edge cases, in production for content transformation or adding security headers, or in security research for traffic analysis and modification. It integrates seamlessly with nginx for production deployments, handling SSL termination and load balancing while python-proxy focuses on intelligent content modification.
+---
 
-The extensible architecture supports both simple one-line configuration changes and complex multi-step transformations. Built-in hooks handle common operations like 301 redirects, JSON field manipulation, HTML element modifications using XPath, link rewriting, and content fetching from external sources. For custom requirements, the Python hook system provides full programmatic access with automatic discovery, decorator support, and comprehensive error handling. Whether you're a developer needing quick traffic manipulation or a DevOps engineer building sophisticated proxy infrastructure, python-proxy scales from simple scripts to enterprise deployments.
+## ✨ Overview
 
-## Features
+**Python-proxy** is a high-performance, asynchronous HTTP proxy server built on `aiohttp` that sits between clients and backend servers, allowing you to **intercept**, **inspect**, and **modify** HTTP traffic in real-time. Unlike traditional proxies that simply forward traffic, python-proxy provides a sophisticated **hook system** that enables you to transform requests and responses on-the-fly.
 
-- **Async/Await Architecture**: Built on `aiohttp` for high-performance async I/O
-- **Request Modification**: Modify requests before they're proxied (headers, body, URL, etc.)
-- **Response Modification**: Modify responses after receiving from target (HTML injection, content replacement, etc.)
-- **Hook System**: Simple Python-based hook system with automatic discovery
-- **Configuration-Based Hooks**: Powerful built-in hooks (redirects, rewrites, HTML/text transformation) via YAML config - no coding required!
-- **Flexible Configuration**: Configure via CLI arguments, environment variables, or YAML config file
-- **Header-Based Routing**: Route requests to different targets using `X-Proxy-Server` header
+### 🎯 What Makes It Special?
 
-## Installation
+> 💡 **Think of it as nginx with superpowers**
+> Get the reliability and performance of a production-grade proxy, combined with the flexibility to programmatically modify any aspect of HTTP traffic.
+
+**Common Use Cases:**
+- 🔐 Add authentication headers
+- 📊 Inject analytics scripts into web pages
+- 🧪 Mock API responses for testing
+- 🔗 Rewrite URLs and links
+- 🛡️ Sanitize sensitive data
+- 🎲 Implement custom routing logic
+
+### 🎨 Developer Experience First
+
+```yaml
+# Zero-code configuration - just edit YAML!
+post_hooks:
+  - hostname: "example.com"
+    url_pattern: "/*"
+    hook: "link_rewrite"
+    params:
+      from_domain: "example.com"
+      to_domain: "example.com.local"
+```
+
+🟢 **Start Simple**: Use built-in YAML hooks for redirects, text replacement, and HTML modifications
+🟡 **Scale Up**: Write custom Python hooks with full access to request/response data
+🔵 **Go Advanced**: Implement rate limiting, caching, A/B testing, or external API integration
+
+⚡ **Async architecture** ensures modifications don't compromise performance, handling **thousands of concurrent connections** efficiently.
+
+### 🌍 Perfect For Every Environment
+
+| Environment | Use Case | Benefits |
+|------------|----------|----------|
+| 🔧 **Development** | Test API responses | No backend changes needed |
+| 🧪 **QA/Testing** | Inject test data | Simulate edge cases easily |
+| 🚀 **Production** | Content transformation | Add security headers on-the-fly |
+| 🔬 **Security** | Traffic analysis | Intercept and modify requests |
+
+**Seamless nginx integration** for production deployments - handle SSL termination and load balancing while python-proxy focuses on intelligent content modification.
+
+### 🛠️ Extensible Architecture
+
+**Built-in hooks** handle common operations:
+- ↩️ 301/302 redirects
+- 📝 JSON field manipulation
+- 🏗️ HTML element modifications (XPath)
+- 🔗 Link rewriting
+- 🌐 Content fetching from external sources
+
+**Python hook system** provides:
+- 🔍 Automatic discovery
+- 🎯 Decorator support
+- ⚠️ Comprehensive error handling
+- 🎛️ Full programmatic access
+
+Whether you're a **developer** needing quick traffic manipulation or a **DevOps engineer** building sophisticated proxy infrastructure, python-proxy scales from simple scripts to enterprise deployments.
+
+---
+
+## 🎁 Features
+
+- ⚡ **Async/Await Architecture**: Built on `aiohttp` for high-performance async I/O
+- 📤 **Request Modification**: Modify requests before they're proxied (headers, body, URL, etc.)
+- 📥 **Response Modification**: Modify responses after receiving from target (HTML injection, content replacement, etc.)
+- 🎣 **Hook System**: Simple Python-based hook system with automatic discovery
+- ⚙️ **Configuration-Based Hooks**: Powerful built-in hooks (redirects, rewrites, HTML/text transformation) via YAML config - no coding required!
+- 🔧 **Flexible Configuration**: Configure via CLI arguments, environment variables, or YAML config file
+- 🎯 **Header-Based Routing**: Route requests to different targets using `X-Proxy-Server` header
+
+## 📦 Installation
 
 ```bash
 # Install from source
@@ -34,9 +105,13 @@ pip install -e .
 pip install -r requirements.txt
 ```
 
-## Quick Start
+> 💡 **Requirements**: Python 3.8 or higher
 
-### Basic Usage
+---
+
+## 🚀 Quick Start
+
+### 💻 Basic Usage
 
 ```bash
 # Start proxy on default port 8080
@@ -52,42 +127,42 @@ python-proxy --target http://example.com
 python-proxy --config config.yaml
 ```
 
-### Quick Start with realmo.com.local (Default Configuration)
+### ⚡ Quick Start with realmo.com.local (Default Configuration)
 
-The default `config.yaml` is pre-configured for proxying realmo.com locally with automatic link rewriting:
+> 🎯 The default `config.yaml` is **pre-configured** for proxying realmo.com locally with automatic link rewriting!
 
 ```bash
-# 1. Add to /etc/hosts
+# 1️⃣ Add to /etc/hosts
 echo "127.0.0.1 realmo.com.local" | sudo tee -a /etc/hosts
 
-# 2. Set up port 80 capability (one-time)
+# 2️⃣ Set up port 80 capability (one-time)
 ./scripts/setup_port80.sh
 
-# 3. Start proxy with default config
+# 3️⃣ Start proxy with default config
 python-proxy --config config.yaml
 
-# 4. Browse to http://realmo.com.local
+# 4️⃣ Browse to http://realmo.com.local
 ```
 
-**What this does:**
-- Proxies `realmo.com.local` → `realmo.com:80`
-- Automatically rewrites all `realmo.com` links to `realmo.com.local`
-- Keeps all traffic flowing through the proxy for testing/development
+**✨ What this does:**
+- 🔄 Proxies `realmo.com.local` → `realmo.com:80`
+- 🔗 Automatically rewrites all `realmo.com` links to `realmo.com.local`
+- 🎯 Keeps all traffic flowing through the proxy for testing/development
 
-See [examples/REALMO_SETUP.md](examples/REALMO_SETUP.md) for detailed guide and customization options.
+📚 See [examples/REALMO_SETUP.md](examples/REALMO_SETUP.md) for detailed guide and customization options.
 
-### Running on Port 80 (Privileged Port)
+### 🔓 Running on Port 80 (Privileged Port)
 
-**Quick Install (Recommended):**
+**✅ Quick Install (Recommended):**
 ```bash
 # Install wrapper and set up port 80 capability
-./scripts/install_wrapper.sh
+./scripts/setup_port80.sh
 
 # Now use from anywhere
 python-proxy --host 192.168.2.7 --port 80
 ```
 
-**Manual Setup:**
+**🔧 Manual Setup:**
 ```bash
 # One-time setup (resolves symlinks if needed)
 sudo setcap 'cap_net_bind_service=+ep' $(readlink -f $(which python3))
@@ -96,9 +171,9 @@ sudo setcap 'cap_net_bind_service=+ep' $(readlink -f $(which python3))
 python-proxy --host 192.168.2.7 --port 80
 ```
 
-See [examples/port80_setup.md](examples/port80_setup.md) for detailed instructions and alternatives.
+📚 See [examples/port80_setup.md](examples/port80_setup.md) for detailed instructions and alternatives.
 
-### Using Environment Variables
+### 🌐 Using Environment Variables
 
 ```bash
 export PROXY_PORT=8080
@@ -107,7 +182,7 @@ export PROXY_HOOKS_DIR=./hooks
 python-proxy
 ```
 
-### Making Requests Through the Proxy
+### 📡 Making Requests Through the Proxy
 
 The proxy supports multiple ways to specify the backend target:
 
@@ -183,11 +258,13 @@ curl -x http://localhost:8080 http://myapp.com.local/
 
 Then requests to `api.example.com.local:8080` go through your proxy to `api.example.com:80`.
 
-## Configuration-Based Hooks (New!)
+## 🎣 Configuration-Based Hooks
 
-Configure powerful hooks directly in your YAML config - no Python coding required! Perfect for redirects, URL rewrites, content modification, and more.
+> ⚡ **NEW!** Configure powerful hooks directly in your YAML config - **no Python coding required!**
 
-### Quick Example
+Perfect for redirects, URL rewrites, content modification, and more.
+
+### 💡 Quick Example
 
 ```yaml
 # config.yaml
@@ -213,37 +290,56 @@ hook_mappings:
         replacement: "NewCompany"
 ```
 
-**Built-in hooks include:**
-- **Pre-hooks**: `redirect_301`, `redirect_302`, `gone_410`, `not_found_404`, `static_html`
-- **Post-hooks**: `url_rewrite`, `text_rewrite`, `link_rewrite`, `html_rewrite`, `xpath_replace_from_url`, `json_modify`
+**🔌 Built-in hooks include:**
 
-**Features:**
-- Hostname patterns with wildcards (`*.example.com`)
-- URL patterns with glob (`/api/*`) or regex (`regex:^/api/v[0-9]+/`)
-- Pre-hooks can skip backend calls (redirects, errors)
-- Post-hooks modify content (HTML, text, JSON)
-- **Organize hooks with includes**: Separate hooks by hostname into dedicated files for better organization
+| Type | Hooks | Purpose |
+|------|-------|---------|
+| **⬅️ Pre-hooks** | `redirect_301`, `redirect_302`, `gone_410`, `not_found_404`, `static_html` | Execute before backend |
+| **➡️ Post-hooks** | `url_rewrite`, `text_rewrite`, `link_rewrite`, `html_rewrite`, `xpath_replace_from_url`, `json_modify` | Modify responses |
 
-See [examples/HOOKS.md](examples/HOOKS.md) for complete documentation, [examples/config_with_hooks.yaml](examples/config_with_hooks.yaml) for inline hooks, and [examples/config_with_includes.yaml](examples/config_with_includes.yaml) for include examples.
+**✨ Features:**
+- 🌐 Hostname patterns with wildcards (`*.example.com`)
+- 🔍 URL patterns with glob (`/api/*`) or regex (`regex:^/api/v[0-9]+/`)
+- ⏭️ Pre-hooks can skip backend calls (redirects, errors)
+- 🔧 Post-hooks modify content (HTML, text, JSON)
+- 📁 **Organize hooks with includes**: Separate hooks by hostname into dedicated files
 
-### Nginx Integration
+📚 **Learn more:**
+- [examples/HOOKS.md](examples/HOOKS.md) - Complete documentation
+- [examples/config_with_hooks.yaml](examples/config_with_hooks.yaml) - Inline hooks examples
+- [examples/config_with_includes.yaml](examples/config_with_includes.yaml) - Include examples
 
-Use python-proxy with nginx as a frontend reverse proxy for production deployments. Nginx handles SSL termination and load balancing, while python-proxy provides powerful hook-based content modification.
+---
 
-See [examples/NginxIntegration.md](examples/NginxIntegration.md) for complete nginx configuration examples including:
-- Proxy entire site or specific paths through python-proxy
-- Dynamic backend routing based on URL patterns
-- Load balancing with multiple python-proxy instances
-- Production-ready setup with SSL/TLS
-- Performance optimization and security best practices
+### 🔗 Nginx Integration
 
-## Creating Custom Python Hooks
+Use python-proxy with **nginx** as a frontend reverse proxy for production deployments.
+
+```
+┌─────────┐     ┌─────────┐     ┌──────────────┐     ┌─────────┐
+│ Client  │ ──▶ │  nginx  │ ──▶ │ Python-Proxy │ ──▶ │ Backend │
+│         │ ◀── │  (SSL)  │ ◀── │   (Hooks)    │ ◀── │         │
+└─────────┘     └─────────┘     └──────────────┘     └─────────┘
+```
+
+**Nginx handles:** SSL termination, load balancing
+**Python-proxy handles:** Hook-based content modification
+
+📚 See [examples/NginxIntegration.md](examples/NginxIntegration.md) for complete configuration:
+- 🌐 Proxy entire site or specific paths
+- 🎯 Dynamic backend routing based on URL patterns
+- ⚖️ Load balancing with multiple python-proxy instances
+- 🔒 Production-ready setup with SSL/TLS
+- ⚡ Performance optimization and security best practices
+
+## 🐍 Creating Custom Python Hooks
+
+> 🎓 **New to hooks?** Start with [Creating Custom Hooks - For Beginners](examples/CUSTOM_HOOKS_FOR_DUMMIES.md)
+> A complete step-by-step tutorial with real-world examples!
 
 For advanced use cases, you can write custom Python hooks. Place them in a hooks directory.
 
-**📚 New to hooks? Start here:** [Creating Custom Hooks - For Beginners](examples/CUSTOM_HOOKS_FOR_DUMMIES.md) - A complete step-by-step tutorial with real-world examples!
-
-### Simple Hook Example
+### 💡 Simple Hook Example
 
 Create a file `hooks/my_hooks.py`:
 
@@ -267,7 +363,7 @@ Then run with:
 python-proxy --hooks ./hooks --target http://example.com
 ```
 
-### Advanced Hooks with Decorators
+### 🚀 Advanced Hooks with Decorators
 
 ```python
 from python_proxy.hooks import before_request, after_response
@@ -291,14 +387,16 @@ async def inject_script(response, body):
     return body
 ```
 
-**Learn more:**
-- [Creating Custom Hooks - For Beginners](examples/CUSTOM_HOOKS_FOR_DUMMIES.md) - Complete tutorial
-- [HOOKS.md](examples/HOOKS.md) - Configuration-based hooks reference
-- `examples/` directory - More hook examples
+**📚 Learn more:**
+- 📖 [Creating Custom Hooks - For Beginners](examples/CUSTOM_HOOKS_FOR_DUMMIES.md) - Complete tutorial
+- 📄 [HOOKS.md](examples/HOOKS.md) - Configuration-based hooks reference
+- 📁 `examples/` directory - More hook examples
 
-## Configuration
+---
 
-### Configuration File (YAML)
+## ⚙️ Configuration
+
+### 📝 Configuration File (YAML)
 
 Create `config.yaml`:
 
@@ -311,42 +409,44 @@ hooks_dir: "./hooks"
 log_level: "INFO"
 ```
 
-### Configuration Priority
+### 🔢 Configuration Priority
 
-1. CLI arguments (highest priority)
-2. Configuration file (`--config`)
-3. Environment variables
-4. Default values (lowest priority)
+1. 🥇 CLI arguments (highest priority)
+2. 🥈 Configuration file (`--config`)
+3. 🥉 Environment variables
+4. 4️⃣ Default values (lowest priority)
 
-## Running on Port 80
+## 🔓 Running on Port 80
 
-Ports below 1024 require special permissions. The proxy provides helpful error messages and multiple solutions:
+> ⚠️ Ports below 1024 require special permissions. The proxy provides helpful error messages and multiple solutions.
 
 ```bash
-# Quick setup (recommended)
+# ✅ Quick setup (recommended)
 ./scripts/setup_port80.sh
 
-# Or manually
+# 🔧 Or manually
 sudo setcap 'cap_net_bind_service=+ep' $(which python3)
 python-proxy --host 192.168.2.7 --port 80
 ```
 
-**Other options:**
-- Run with sudo (not recommended for production)
-- Use iptables port forwarding
-- Use systemd socket activation
+**🔀 Other options:**
+- 🔴 Run with sudo (not recommended for production)
+- 🔀 Use iptables port forwarding
+- ⚙️ Use systemd socket activation
 
-See [examples/port80_setup.md](examples/port80_setup.md) for complete guide.
+📚 See [examples/port80_setup.md](examples/port80_setup.md) for complete guide.
 
-## Development
+---
 
-### Install Development Dependencies
+## 🛠️ Development
+
+### 📥 Install Development Dependencies
 
 ```bash
 pip install -r requirements-dev.txt
 ```
 
-### Run Tests
+### 🧪 Run Tests
 
 ```bash
 # Run all tests
@@ -359,7 +459,7 @@ pytest --cov=python_proxy
 pytest tests/test_config.py
 ```
 
-### Linting
+### 🔍 Linting
 
 ```bash
 # Run ruff linter
@@ -369,27 +469,43 @@ ruff check .
 ruff check --fix .
 ```
 
-## Use Cases
+---
 
-- **Web Scraping**: Modify headers, inject credentials
-- **Development**: Test how your app handles different responses
-- **Security Testing**: Analyze and modify traffic
-- **Content Injection**: Add scripts, styles, or content to proxied pages
-- **API Testing**: Modify API requests/responses on the fly
-- **Traffic Analysis**: Log and analyze HTTP traffic
+## 🎯 Use Cases
 
-## License
+| Use Case | Description | Benefits |
+|----------|-------------|----------|
+| 🕷️ **Web Scraping** | Modify headers, inject credentials | Bypass restrictions |
+| 🔧 **Development** | Test different API responses | No backend changes |
+| 🔐 **Security Testing** | Analyze and modify traffic | Find vulnerabilities |
+| 💉 **Content Injection** | Add scripts, styles, or content | Testing & analytics |
+| 🧪 **API Testing** | Modify requests/responses | Simulate edge cases |
+| 📊 **Traffic Analysis** | Log and analyze HTTP traffic | Debug & monitor |
 
-Copyright (C) 2025 Sergey Porfiriev <parf@difive.com>
+---
+
+## 📜 License
+
+**Copyright (C) 2025 Sergey Porfiriev** <parf@difive.com>
 
 This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
+it under the terms of the **GNU General Public License** as published by
 the Free Software Foundation; either version 2 of the License, or
 (at your option) any later version.
 
 This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
+but **WITHOUT ANY WARRANTY**; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU General Public License for more details.
 
-License: GPL v2 - See [LICENSE](LICENSE) file for details.
+📄 **License:** GPL v2 - See [LICENSE](LICENSE) file for details.
+
+---
+
+<div align="center">
+
+**Made with ❤️ by Sergey Porfiriev**
+
+⭐ Star this repo if you find it useful! • 🐛 Report issues • 💡 Contribute
+
+</div>
