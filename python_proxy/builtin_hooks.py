@@ -573,6 +573,50 @@ async def link_rewrite(
                     element.set(attr, new_value)
                     modified = True
 
+        # Also process URLs inside <script> tags (JSON-LD, JavaScript strings, etc.)
+        script_elements = tree.xpath("//script")
+        for script_element in script_elements:
+            script_text = script_element.text
+            if not script_text:
+                continue
+
+            # Apply the same domain replacement patterns to script content
+            new_script_text = script_text
+
+            # Escape special regex characters in domains
+            from_escaped = re.escape(from_domain)
+            flags = 0 if case_sensitive else re.IGNORECASE
+
+            # Determine target protocol
+            target_protocol_http = "http"
+            target_protocol_https = "http" if force_http else "https"
+
+            # Replace protocol-relative URLs (avoiding http:// or https://)
+            new_script_text = re.sub(
+                f"(?<!:)//({from_escaped})(?![a-zA-Z0-9.-])",
+                f"//{to_domain}",
+                new_script_text,
+                flags=flags,
+            )
+            # Replace http URLs
+            new_script_text = re.sub(
+                f"http://({from_escaped})(?![a-zA-Z0-9.-])",
+                f"{target_protocol_http}://{to_domain}",
+                new_script_text,
+                flags=flags,
+            )
+            # Replace https URLs
+            new_script_text = re.sub(
+                f"https://({from_escaped})(?![a-zA-Z0-9.-])",
+                f"{target_protocol_https}://{to_domain}",
+                new_script_text,
+                flags=flags,
+            )
+
+            if new_script_text != script_text:
+                script_element.text = new_script_text
+                modified = True
+
         if modified:
             logger.info(f"link_rewrite: Replaced {from_domain} with {to_domain}")
             result = lxml_html.tostring(tree, encoding="unicode")
