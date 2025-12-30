@@ -1,0 +1,60 @@
+<svg width="700" height="180" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .box { fill: #ffffff; stroke: #27ae60; stroke-width: 2; rx: 10; }
+      .nginx-box { fill: #e8f8f5; stroke: #16a085; stroke-width: 3; rx: 12; }
+      .proxy-box { fill: #fef5e7; stroke: #f39c12; stroke-width: 2; rx: 10; }
+      .text-title { font-family: Arial, sans-serif; font-size: 16px; font-weight: bold; fill: #2c3e50; }
+      .text-subtitle { font-family: Arial, sans-serif; font-size: 12px; fill: #7f8c8d; }
+      .arrow { stroke: #27ae60; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+      .arrow-back { stroke: #95a5a6; stroke-width: 2; fill: none; marker-end: url(#arrowhead-back); stroke-dasharray: 5,5; }
+    </style>
+
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#27ae60" />
+    </marker>
+
+    <marker id="arrowhead-back" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#95a5a6" />
+    </marker>
+  </defs>
+
+  <!-- Client Box -->
+  <rect class="box" x="10" y="60" width="110" height="60"/>
+  <text class="text-title" x="65" y="85" text-anchor="middle">🌐 Client</text>
+  <text class="text-subtitle" x="65" y="105" text-anchor="middle">HTTPS Request</text>
+
+  <!-- Nginx Box -->
+  <rect class="nginx-box" x="170" y="40" width="130" height="100"/>
+  <text class="text-title" x="235" y="70" text-anchor="middle">🔒 nginx</text>
+  <line x1="180" y1="80" x2="290" y2="80" stroke="#16a085" stroke-width="1" opacity="0.3"/>
+  <text class="text-subtitle" x="235" y="100" text-anchor="middle">SSL Termination</text>
+  <text class="text-subtitle" x="235" y="120" text-anchor="middle">Load Balancing</text>
+
+  <!-- Python-Proxy Box -->
+  <rect class="proxy-box" x="350" y="40" width="150" height="100"/>
+  <text class="text-title" x="425" y="70" text-anchor="middle">⚡ Python-Proxy</text>
+  <line x1="360" y1="80" x2="490" y2="80" stroke="#f39c12" stroke-width="1" opacity="0.3"/>
+  <text class="text-subtitle" x="425" y="100" text-anchor="middle">Content Transform</text>
+  <text class="text-subtitle" x="425" y="120" text-anchor="middle">Hook Processing</text>
+
+  <!-- Backend Box -->
+  <rect class="box" x="550" y="60" width="110" height="60"/>
+  <text class="text-title" x="605" y="85" text-anchor="middle">🖥️ Backend</text>
+  <text class="text-subtitle" x="605" y="105" text-anchor="middle">App Server</text>
+
+  <!-- Forward Arrows -->
+  <path class="arrow" d="M 125 85 L 165 85"/>
+  <path class="arrow" d="M 305 85 L 345 85"/>
+  <path class="arrow" d="M 505 85 L 545 85"/>
+
+  <!-- Backward Arrows -->
+  <path class="arrow-back" d="M 545 95 L 505 95"/>
+  <path class="arrow-back" d="M 345 95 L 305 95"/>
+  <path class="arrow-back" d="M 165 95 L 125 95"/>
+
+  <!-- Labels -->
+  <text class="text-subtitle" x="145" y="80" text-anchor="middle" fill="#27ae60" font-size="10">HTTPS</text>
+  <text class="text-subtitle" x="325" y="80" text-anchor="middle" fill="#27ae60" font-size="10">HTTP</text>
+  <text class="text-subtitle" x="525" y="80" text-anchor="middle" fill="#27ae60" font-size="10">Proxied</text>
+</svg>

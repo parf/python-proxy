@@ -1,0 +1,58 @@
+<svg width="800" height="200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .box { fill: #ffffff; stroke: #4a90e2; stroke-width: 2; rx: 10; }
+      .proxy-box { fill: #e8f4f8; stroke: #2c5aa0; stroke-width: 3; rx: 12; }
+      .text-title { font-family: Arial, sans-serif; font-size: 16px; font-weight: bold; fill: #2c3e50; }
+      .text-subtitle { font-family: Arial, sans-serif; font-size: 13px; fill: #7f8c8d; }
+      .text-feature { font-family: Arial, sans-serif; font-size: 12px; fill: #34495e; }
+      .arrow { stroke: #4a90e2; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+      .arrow-back { stroke: #95a5a6; stroke-width: 2; fill: none; marker-end: url(#arrowhead-back); stroke-dasharray: 5,5; }
+    </style>
+
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#4a90e2" />
+    </marker>
+
+    <marker id="arrowhead-back" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#95a5a6" />
+    </marker>
+  </defs>
+
+  <!-- Client Box -->
+  <rect class="box" x="20" y="50" width="140" height="100"/>
+  <text class="text-title" x="90" y="85" text-anchor="middle">🌐 Client</text>
+  <text class="text-subtitle" x="90" y="105" text-anchor="middle">Browser/App</text>
+  <text class="text-feature" x="90" y="125" text-anchor="middle">Makes Request</text>
+
+  <!-- Python-Proxy Box (highlighted) -->
+  <rect class="proxy-box" x="240" y="30" width="180" height="140"/>
+  <text class="text-title" x="330" y="65" text-anchor="middle">⚡ Python-Proxy</text>
+  <line x1="250" y1="75" x2="410" y2="75" stroke="#2c5aa0" stroke-width="1" opacity="0.3"/>
+  <text class="text-feature" x="330" y="95" text-anchor="middle">🔧 Transform</text>
+  <text class="text-feature" x="330" y="115" text-anchor="middle">🎯 Modify</text>
+  <text class="text-feature" x="330" y="135" text-anchor="middle">🎣 Apply Hooks</text>
+  <text class="text-feature" x="330" y="155" text-anchor="middle">🔄 Route</text>
+
+  <!-- Backend Box -->
+  <rect class="box" x="500" y="50" width="140" height="100"/>
+  <text class="text-title" x="570" y="85" text-anchor="middle">🖥️ Backend</text>
+  <text class="text-subtitle" x="570" y="105" text-anchor="middle">Target Server</text>
+  <text class="text-feature" x="570" y="125" text-anchor="middle">Returns Data</text>
+
+  <!-- Forward Arrow: Client -> Proxy -->
+  <path class="arrow" d="M 165 90 L 235 90"/>
+  <text class="text-feature" x="200" y="85" text-anchor="middle" fill="#4a90e2">Request</text>
+
+  <!-- Forward Arrow: Proxy -> Backend -->
+  <path class="arrow" d="M 425 90 L 495 90"/>
+  <text class="text-feature" x="460" y="85" text-anchor="middle" fill="#4a90e2">Modified</text>
+
+  <!-- Backward Arrow: Backend -> Proxy -->
+  <path class="arrow-back" d="M 495 110 L 425 110"/>
+  <text class="text-feature" x="460" y="130" text-anchor="middle" fill="#95a5a6">Response</text>
+
+  <!-- Backward Arrow: Proxy -> Client -->
+  <path class="arrow-back" d="M 235 110 L 165 110"/>
+  <text class="text-feature" x="200" y="130" text-anchor="middle" fill="#95a5a6">Enhanced</text>
+</svg>

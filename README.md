@@ -4,14 +4,7 @@
 
 <div align="center">
 
-```
-┌─────────────┐      ┌──────────────────┐      ┌─────────────┐
-│   Client    │ ───▶ │  Python-Proxy    │ ───▶ │   Backend   │
-│  (Browser)  │      │  ⚡ Transform     │      │   Server    │
-│             │ ◀─── │  🔧 Modify        │ ◀─── │             │
-└─────────────┘      │  🎯 Route         │      └─────────────┘
-                     └──────────────────┘
-```
+![Python-Proxy Flow](docs/images/proxy-flow.svg)
 
 **nginx with superpowers** • **Zero-code configuration** • **Production-ready**
 
@@ -315,12 +308,11 @@ hook_mappings:
 
 Use python-proxy with **nginx** as a frontend reverse proxy for production deployments.
 
-```
-┌─────────┐     ┌─────────┐     ┌──────────────┐     ┌─────────┐
-│ Client  │ ──▶ │  nginx  │ ──▶ │ Python-Proxy │ ──▶ │ Backend │
-│         │ ◀── │  (SSL)  │ ◀── │   (Hooks)    │ ◀── │         │
-└─────────┘     └─────────┘     └──────────────┘     └─────────┘
-```
+<div align="center">
+
+![Nginx Integration](docs/images/nginx-integration.svg)
+
+</div>
 
 **Nginx handles:** SSL termination, load balancing
 **Python-proxy handles:** Hook-based content modification
