@@ -42,9 +42,11 @@ post_hooks:
       to_domain: "example.com.local"
 ```
 
-🟢 **Start Simple**: Use built-in YAML hooks for redirects, text replacement, and HTML modifications
-🟡 **Scale Up**: Write custom Python hooks with full access to request/response data
-🔵 **Go Advanced**: Implement rate limiting, caching, A/B testing, or external API integration
+**🟢 Start Simple:** Use built-in YAML hooks for redirects, text replacement, and HTML modifications
+
+**🟡 Scale Up:** Write custom Python hooks with full access to request/response data
+
+**🔵 Go Advanced:** Implement rate limiting, caching, A/B testing, or external API integration
 
 ⚡ **Async architecture** ensures modifications don't compromise performance, handling **thousands of concurrent connections** efficiently.
 
