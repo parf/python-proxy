@@ -1,6 +1,18 @@
 # python-proxy
 
-Transparent Python HTTP Proxy (similar to nginx) with powerful request/response modification hooks. Allows you to intercept and modify HTTP traffic before forwarding to the target server or after receiving the response.
+**A powerful, transparent HTTP proxy server with intelligent traffic modification capabilities.**
+
+## Overview
+
+Python-proxy is a high-performance, asynchronous HTTP proxy server built on `aiohttp` that sits between clients and backend servers, allowing you to intercept, inspect, and modify HTTP traffic in real-time. Unlike traditional proxies that simply forward traffic, python-proxy provides a sophisticated hook system that enables you to transform requests and responses on-the-fly, making it an essential tool for development, testing, security analysis, and production deployments.
+
+Think of it as nginx with superpowers - you get the reliability and performance of a production-grade proxy, combined with the flexibility to programmatically modify any aspect of HTTP traffic. Whether you need to add authentication headers, inject analytics scripts into web pages, mock API responses for testing, rewrite URLs, sanitize sensitive data, or implement custom routing logic, python-proxy makes it simple through either configuration files or custom Python code.
+
+The project is designed with developer experience in mind. You can start with zero-code configuration using built-in YAML hooks for common tasks like redirects, text replacement, and HTML modifications. When you need more power, the Python hook system gives you complete control with full access to request/response data, allowing you to implement complex logic like rate limiting, caching, A/B testing, or integration with external APIs. The async architecture ensures your modifications don't compromise performance, handling thousands of concurrent connections efficiently.
+
+Python-proxy excels in scenarios where you need to manipulate HTTP traffic without modifying the backend or client applications. Use it during development to test how your application handles different API responses, in QA environments to inject test data or simulate edge cases, in production for content transformation or adding security headers, or in security research for traffic analysis and modification. It integrates seamlessly with nginx for production deployments, handling SSL termination and load balancing while python-proxy focuses on intelligent content modification.
+
+The extensible architecture supports both simple one-line configuration changes and complex multi-step transformations. Built-in hooks handle common operations like 301 redirects, JSON field manipulation, HTML element modifications using XPath, link rewriting, and content fetching from external sources. For custom requirements, the Python hook system provides full programmatic access with automatic discovery, decorator support, and comprehensive error handling. Whether you're a developer needing quick traffic manipulation or a DevOps engineer building sophisticated proxy infrastructure, python-proxy scales from simple scripts to enterprise deployments.
 
 ## Features
 
