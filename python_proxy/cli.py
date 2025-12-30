@@ -117,16 +117,20 @@ Examples:
     logger = logging.getLogger(__name__)
 
     # Load hooks
-    hook_manager = HookManager(config.hooks_dir)
+    hook_manager = HookManager(config.hooks_dir, config.hook_mappings)
     hook_manager.load_hooks()
 
     # Create proxy server
-    before_hook = (
-        hook_manager.execute_before_request if hook_manager.before_request_hooks else None
+    # Set hooks if there are any (file-based or configuration-based)
+    has_before_hooks = (
+        hook_manager.before_request_hooks or hook_manager.pre_hook_configs
     )
-    after_hook = (
-        hook_manager.execute_after_response if hook_manager.after_response_hooks else None
+    has_after_hooks = (
+        hook_manager.after_response_hooks or hook_manager.post_hook_configs
     )
+
+    before_hook = hook_manager.execute_before_request if has_before_hooks else None
+    after_hook = hook_manager.execute_after_response if has_after_hooks else None
     proxy = ProxyServer(
         host=config.host,
         port=config.port,

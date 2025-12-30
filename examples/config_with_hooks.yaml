@@ -1,0 +1,172 @@
+# Example configuration with hook mappings
+# This demonstrates all built-in pre-hooks and post-hooks
+
+host: "0.0.0.0"
+port: 8080
+target_host: "http://example.com"
+timeout: 30
+log_level: "INFO"
+
+# Hook mappings configuration
+hook_mappings:
+  # ============================================================================
+  # PRE-HOOKS (execute before proxying, can prevent backend calls)
+  # ============================================================================
+  pre_hooks:
+    # 301 Permanent Redirect - redirect old URLs to new ones
+    - hostname: "example.com"
+      url_pattern: "/old-page"
+      hook: "redirect_301"
+      params:
+        location: "https://example.com/new-page"
+        preserve_query: true
+
+    # 301 Redirect with wildcard hostname matching
+    - hostname: "*.old-domain.com"
+      url_pattern: "/*"
+      hook: "redirect_301"
+      params:
+        location: "https://new-domain.com/"
+        preserve_query: true
+
+    # 302 Temporary Redirect
+    - hostname: "example.com"
+      url_pattern: "/temp-redirect"
+      hook: "redirect_302"
+      params:
+        location: "https://example.com/temporary-page"
+
+    # 410 Gone - mark content as permanently removed
+    - hostname: "example.com"
+      url_pattern: "/deleted/*"
+      hook: "gone_410"
+      params:
+        message: "This content has been permanently removed"
+
+    # 410 Gone for specific paths using regex
+    - hostname: "api.example.com"
+      url_pattern: "regex:^/v1/(deprecated|removed)/.*"
+      hook: "gone_410"
+      params:
+        message: "This API endpoint has been deprecated and removed"
+
+    # 404 Not Found - return 404 for specific paths
+    - hostname: "example.com"
+      url_pattern: "/hidden/*"
+      hook: "not_found_404"
+      params:
+        message: "Page not found"
+        html: true
+
+    # 404 for old API versions
+    - hostname: "api.example.com"
+      url_pattern: "/v0/*"
+      hook: "not_found_404"
+      params:
+        message: "API v0 is no longer supported. Please use v2."
+
+  # ============================================================================
+  # POST-HOOKS (execute after receiving response, modify content)
+  # ============================================================================
+  post_hooks:
+    # URL Rewrite - convert REST-style URLs to query parameters
+    - hostname: "api.example.com"
+      url_pattern: "/v1/users/*"
+      hook: "url_rewrite"
+      params:
+        pattern: '"/v1/users/([^/"]+)"'
+        replacement: '"/v1/users?id=$1"'
+        content_types: ["text/html", "application/json"]
+
+    # URL Rewrite - convert multiple path segments
+    - hostname: "api.example.com"
+      url_pattern: "/v1/posts/*/comments/*"
+      hook: "url_rewrite"
+      params:
+        pattern: '"/v1/posts/([^/"]+)/comments/([^/"]+)"'
+        replacement: '"/v1/posts?post_id=$1&comment_id=$2"'
+
+    # Text Rewrite - simple find and replace
+    - hostname: "example.com"
+      url_pattern: "/blog/*"
+      hook: "text_rewrite"
+      params:
+        pattern: "OldCompanyName"
+        replacement: "NewCompanyName"
+        flags: "IGNORECASE"
+        content_types: ["text/html", "text/plain"]
+
+    # Text Rewrite - regex pattern for phone numbers
+    - hostname: "example.com"
+      url_pattern: "/contact"
+      hook: "text_rewrite"
+      params:
+        pattern: '\d{3}-\d{3}-\d{4}'
+        replacement: "XXX-XXX-XXXX"
+        content_types: ["text/html"]
+
+    # HTML Rewrite - change page title
+    - hostname: "example.com"
+      url_pattern: "/index.html"
+      hook: "html_rewrite"
+      params:
+        xpath: "//title"
+        action: "set_text"
+        value: "Welcome to Our Modified Site"
+
+    # HTML Rewrite - set image source attribute
+    - hostname: "example.com"
+      url_pattern: "/products/*"
+      hook: "html_rewrite"
+      params:
+        xpath: '//img[@class="logo"]'
+        action: "set_attr"
+        attribute: "src"
+        value: "/new-logo.png"
+
+    # HTML Rewrite - remove advertisement divs
+    - hostname: "example.com"
+      url_pattern: "/*"
+      hook: "html_rewrite"
+      params:
+        xpath: '//div[@class="advertisement"]'
+        action: "remove"
+
+    # HTML Rewrite - insert analytics script before </head>
+    - hostname: "example.com"
+      url_pattern: "/*.html"
+      hook: "html_rewrite"
+      params:
+        xpath: "//head"
+        action: "insert_before"
+        value: '<script>console.log("Analytics loaded");</script>'
+
+    # HTML Rewrite - insert footer after body
+    - hostname: "example.com"
+      url_pattern: "/*"
+      hook: "html_rewrite"
+      params:
+        xpath: "//body"
+        action: "insert_after"
+        value: '<div class="footer">Custom Footer</div>'
+
+# Pattern Matching Examples:
+# ============================================================================
+#
+# Hostname patterns (case-insensitive):
+#   - "example.com"          - exact match
+#   - "*.example.com"        - wildcard subdomain (api.example.com, www.example.com)
+#   - "*"                    - matches all hostnames
+#
+# URL patterns (glob by default):
+#   - "/api/*"               - matches /api/users, /api/posts, etc.
+#   - "/users/*/profile"     - matches /users/123/profile, /users/abc/profile
+#   - "/*.html"              - matches all .html files in root
+#   - "regex:^/api/v[0-9]+/" - regex pattern (must start with "regex:")
+#
+# Hook execution order:
+#   1. Pre-hooks are checked first (first match wins)
+#   2. If pre-hook returns a Response, backend call is skipped
+#   3. Post-hooks are all applied in order (all matches are executed)
+#
+# ============================================================================

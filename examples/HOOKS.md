@@ -1,0 +1,437 @@
+# Configuration-Based Hooks
+
+Python-proxy now supports powerful configuration-based hooks that allow you to intercept and modify HTTP traffic without writing any Python code. Simply configure hooks in your YAML config file!
+
+## Overview
+
+Hooks are divided into two categories:
+
+1. **Pre-Hooks**: Execute **before** proxying to the backend
+   - Can return an early response to **skip the backend call entirely**
+   - Perfect for redirects, error pages, or blocking requests
+
+2. **Post-Hooks**: Execute **after** receiving the response from backend
+   - Modify response content (HTML, text, JSON, etc.)
+   - Rewrite URLs, inject content, or transform data
+
+## Configuration Structure
+
+```yaml
+hook_mappings:
+  pre_hooks:
+    - hostname: "example.com"          # Hostname pattern (supports wildcards)
+      url_pattern: "/old-path"         # URL pattern (glob or regex)
+      hook: "redirect_301"             # Built-in hook name
+      params:                          # Hook-specific parameters
+        location: "/new-path"
+
+  post_hooks:
+    - hostname: "*.example.com"
+      url_pattern: "/api/*"
+      hook: "url_rewrite"
+      params:
+        pattern: '"/api/users/([^/"]+)"'
+        replacement: '"/api/users?id=$1"'
+```
+
+## Pattern Matching
+
+### Hostname Patterns
+
+Hostname matching is **case-insensitive** and supports wildcards:
+
+- `"example.com"` - Exact match
+- `"*.example.com"` - Wildcard subdomain (matches `api.example.com`, `www.example.com`, etc.)
+- `"*"` - Matches **all** hostnames
+
+### URL Patterns
+
+URL patterns default to **glob matching**, but also support regex:
+
+**Glob patterns** (default):
+- `"/api/*"` - Matches `/api/users`, `/api/posts`, etc.
+- `"/users/*/profile"` - Matches `/users/123/profile`, `/users/abc/profile`
+- `"/*.html"` - Matches all `.html` files in root directory
+
+**Regex patterns** (prefix with `regex:`):
+- `"regex:^/api/v[0-9]+/"` - Matches `/api/v1/`, `/api/v2/`, etc.
+- `"regex:^/(deprecated|removed)/.*"` - Matches paths starting with `/deprecated/` or `/removed/`
+
+## Built-In Pre-Hooks
+
+Pre-hooks execute before proxying and can return an HTTP response to skip the backend call.
+
+### redirect_301
+
+Returns a 301 Permanent Redirect.
+
+**Parameters:**
+- `location` (required): Target URL for redirect
+- `preserve_query` (optional, default: `true`): Whether to preserve query string
+
+**Example:**
+```yaml
+pre_hooks:
+  - hostname: "example.com"
+    url_pattern: "/old-page"
+    hook: "redirect_301"
+    params:
+      location: "https://example.com/new-page"
+      preserve_query: true
+```
+
+### redirect_302
+
+Returns a 302 Temporary Redirect.
+
+**Parameters:**
+- `location` (required): Target URL for redirect
+- `preserve_query` (optional, default: `true`): Whether to preserve query string
+
+**Example:**
+```yaml
+pre_hooks:
+  - hostname: "example.com"
+    url_pattern: "/temp"
+    hook: "redirect_302"
+    params:
+      location: "https://example.com/temporary-page"
+```
+
+### gone_410
+
+Returns a 410 Gone response (content permanently removed).
+
+**Parameters:**
+- `message` (optional): Custom message (default: "This resource is no longer available")
+
+**Example:**
+```yaml
+pre_hooks:
+  - hostname: "example.com"
+    url_pattern: "/deleted/*"
+    hook: "gone_410"
+    params:
+      message: "This content has been permanently removed"
+```
+
+### not_found_404
+
+Returns a 404 Not Found response.
+
+**Parameters:**
+- `message` (optional): Custom message (default: "Not Found")
+- `html` (optional, default: `false`): Return HTML response instead of plain text
+
+**Example:**
+```yaml
+pre_hooks:
+  - hostname: "example.com"
+    url_pattern: "/hidden/*"
+    hook: "not_found_404"
+    params:
+      message: "Page not found"
+      html: true
+```
+
+## Built-In Post-Hooks
+
+Post-hooks execute after receiving the response and modify the content before returning it to the client.
+
+### url_rewrite
+
+Rewrite URLs in response body using regex patterns. Useful for converting REST-style URLs to query parameters.
+
+**Parameters:**
+- `pattern` (required): Regex pattern to match in URLs
+- `replacement` (required): Replacement string (supports `$1`, `$2`, etc. for capture groups)
+- `content_types` (optional): List of content types to process (default: `["text/html", "text/xml", "application/json"]`)
+
+**Examples:**
+```yaml
+post_hooks:
+  # Convert /api/users/123 to /api/users?id=123
+  - hostname: "api.example.com"
+    url_pattern: "/v1/users/*"
+    hook: "url_rewrite"
+    params:
+      pattern: '"/v1/users/([^/"]+)"'
+      replacement: '"/v1/users?id=$1"'
+
+  # Convert /posts/456/comments/789 to /posts?post_id=456&comment_id=789
+  - hostname: "api.example.com"
+    url_pattern: "/v1/posts/*/comments/*"
+    hook: "url_rewrite"
+    params:
+      pattern: '"/v1/posts/([^/"]+)/comments/([^/"]+)"'
+      replacement: '"/v1/posts?post_id=$1&comment_id=$2"'
+```
+
+### text_rewrite
+
+Rewrite text content using regex patterns. Works on any text-based content.
+
+**Parameters:**
+- `pattern` (required): Regex pattern to search for
+- `replacement` (required): Replacement string
+- `flags` (optional): Regex flags as string (e.g., `"IGNORECASE"`, `"MULTILINE"`, combine with `"|"`)
+- `content_types` (optional): List of content types to process (default: `["text/html", "text/plain", "text/xml"]`)
+
+**Examples:**
+```yaml
+post_hooks:
+  # Simple find and replace (case-insensitive)
+  - hostname: "example.com"
+    url_pattern: "/blog/*"
+    hook: "text_rewrite"
+    params:
+      pattern: "OldCompanyName"
+      replacement: "NewCompanyName"
+      flags: "IGNORECASE"
+
+  # Redact phone numbers
+  - hostname: "example.com"
+    url_pattern: "/contact"
+    hook: "text_rewrite"
+    params:
+      pattern: '\d{3}-\d{3}-\d{4}'
+      replacement: "XXX-XXX-XXXX"
+```
+
+### html_rewrite
+
+Rewrite HTML content using XPath selectors. Powerful for precise HTML modifications.
+
+**Parameters:**
+- `xpath` (required): XPath expression to select elements
+- `action` (required): Action to perform
+  - `set_text`: Set text content of element
+  - `set_attr`: Set attribute value
+  - `remove`: Remove element
+  - `insert_before`: Insert HTML before element
+  - `insert_after`: Insert HTML after element
+- `value` (optional): Value for the action
+- `attribute` (optional): Attribute name (for `set_attr` action)
+
+**Examples:**
+```yaml
+post_hooks:
+  # Change page title
+  - hostname: "example.com"
+    url_pattern: "/index.html"
+    hook: "html_rewrite"
+    params:
+      xpath: "//title"
+      action: "set_text"
+      value: "Welcome to Our Modified Site"
+
+  # Change image source
+  - hostname: "example.com"
+    url_pattern: "/products/*"
+    hook: "html_rewrite"
+    params:
+      xpath: '//img[@class="logo"]'
+      action: "set_attr"
+      attribute: "src"
+      value: "/new-logo.png"
+
+  # Remove ads
+  - hostname: "example.com"
+    url_pattern: "/*"
+    hook: "html_rewrite"
+    params:
+      xpath: '//div[@class="advertisement"]'
+      action: "remove"
+
+  # Insert analytics script
+  - hostname: "example.com"
+    url_pattern: "/*.html"
+    hook: "html_rewrite"
+    params:
+      xpath: "//head"
+      action: "insert_before"
+      value: '<script>console.log("Analytics loaded");</script>'
+```
+
+## Complete Example
+
+Here's a complete configuration file demonstrating various hooks:
+
+```yaml
+host: "0.0.0.0"
+port: 8080
+target_host: "http://example.com"
+log_level: "INFO"
+
+hook_mappings:
+  pre_hooks:
+    # Redirect old URLs
+    - hostname: "example.com"
+      url_pattern: "/old-page"
+      hook: "redirect_301"
+      params:
+        location: "https://example.com/new-page"
+
+    # Return 404 for hidden paths
+    - hostname: "example.com"
+      url_pattern: "/admin/*"
+      hook: "not_found_404"
+      params:
+        message: "Access denied"
+        html: true
+
+    # Mark deprecated API as gone
+    - hostname: "api.example.com"
+      url_pattern: "regex:^/v0/.*"
+      hook: "gone_410"
+      params:
+        message: "API v0 is deprecated. Please use v2."
+
+  post_hooks:
+    # Rewrite API URLs
+    - hostname: "api.example.com"
+      url_pattern: "/v1/*"
+      hook: "url_rewrite"
+      params:
+        pattern: '"/v1/users/([^/"]+)"'
+        replacement: '"/v1/users?id=$1"'
+
+    # Replace company name
+    - hostname: "example.com"
+      url_pattern: "/*"
+      hook: "text_rewrite"
+      params:
+        pattern: "OldCorp"
+        replacement: "NewCorp"
+        flags: "IGNORECASE"
+
+    # Remove tracking scripts
+    - hostname: "example.com"
+      url_pattern: "/*.html"
+      hook: "html_rewrite"
+      params:
+        xpath: '//script[contains(@src, "tracking")]'
+        action: "remove"
+```
+
+## Running with Configuration
+
+```bash
+# Save your config to a file
+# config.yaml
+
+# Run proxy with config
+python-proxy --config config.yaml
+
+# Or specify config path
+python-proxy --config /path/to/config_with_hooks.yaml
+```
+
+## Combining with Custom Hooks
+
+You can use both configuration-based hooks AND custom Python hooks simultaneously:
+
+```bash
+# Run with both config hooks and custom Python hooks
+python-proxy --config config_with_hooks.yaml --hooks ./my-custom-hooks/
+```
+
+**Execution order:**
+1. Configuration-based pre-hooks (first match wins)
+2. Custom Python before_request hooks
+3. **Backend call** (skipped if pre-hook returned a response)
+4. Custom Python after_response hooks
+5. Configuration-based post-hooks (all matches applied)
+
+## Use Cases
+
+### Website Migration
+```yaml
+# Redirect all old domain traffic to new domain
+pre_hooks:
+  - hostname: "*.old-domain.com"
+    url_pattern: "/*"
+    hook: "redirect_301"
+    params:
+      location: "https://new-domain.com/"
+      preserve_query: true
+```
+
+### API Deprecation
+```yaml
+# Mark old API versions as gone
+pre_hooks:
+  - hostname: "api.example.com"
+    url_pattern: "regex:^/v[01]/.*"
+    hook: "gone_410"
+    params:
+      message: "This API version is deprecated. Use /v2/"
+```
+
+### Content Filtering
+```yaml
+# Remove ads and tracking
+post_hooks:
+  - hostname: "*"
+    url_pattern: "/*"
+    hook: "html_rewrite"
+    params:
+      xpath: '//div[@class="ads"]'
+      action: "remove"
+
+  - hostname: "*"
+    url_pattern: "/*"
+    hook: "html_rewrite"
+    params:
+      xpath: '//script[contains(@src, "analytics")]'
+      action: "remove"
+```
+
+### Development/Testing
+```yaml
+# Rewrite API responses for testing
+post_hooks:
+  - hostname: "api.example.com"
+    url_pattern: "/users/*"
+    hook: "text_rewrite"
+    params:
+      pattern: '"status":"active"'
+      replacement: '"status":"inactive"'
+      content_types: ["application/json"]
+```
+
+## Debugging
+
+Enable debug logging to see hook matching and execution:
+
+```yaml
+log_level: "DEBUG"
+```
+
+This will show:
+- Which hooks matched for each request
+- Hook execution results
+- Pattern matching details
+
+## Performance Considerations
+
+- **Pre-hooks**: Very fast (no backend call if returning response)
+- **Post-hooks**: Performance depends on hook type
+  - `url_rewrite` and `text_rewrite`: Fast (regex-based)
+  - `html_rewrite`: Moderate (parses HTML with lxml)
+- **Pattern matching**: Optimized with early exit
+- **Multiple post-hooks**: Applied sequentially (order matters)
+
+## Tips
+
+1. **Order matters for pre-hooks**: First match wins, so place specific patterns before general ones
+2. **Test patterns carefully**: Use regex testers for complex patterns
+3. **Use wildcards wisely**: `"*"` matches everything (use as fallback)
+4. **Content-type filtering**: Specify `content_types` to avoid processing binary files
+5. **Combine hooks**: Use multiple post-hooks for complex transformations
+
+## See Also
+
+- [config_with_hooks.yaml](config_with_hooks.yaml) - Complete working example
+- [USAGE.md](USAGE.md) - General proxy usage guide
+- [Custom hooks guide](advanced_hooks.py) - Writing Python hooks

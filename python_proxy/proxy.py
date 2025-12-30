@@ -164,12 +164,23 @@ class ProxyServer:
         # Apply before_request hook
         if self.before_request_hook:
             try:
-                modified_data = await self.before_request_hook(request, request_data)
-                if modified_data:
-                    request_data = modified_data
+                hook_result = await self.before_request_hook(request, request_data)
+
+                # Check if pre-hook returned a Response (early return, skip backend)
+                if isinstance(hook_result, web.Response):
+                    logger.info("Pre-hook returned early response, skipping backend call")
+                    return hook_result
+
+                # Otherwise, it's modified request data
+                if hook_result:
+                    request_data = hook_result
             except Exception as e:
                 logger.error(f"Error in before_request_hook: {e}", exc_info=True)
                 return web.Response(text=f"Hook error: {e}", status=500)
+
+        # Get hostname and path for post-hook matching
+        original_host = request.host
+        request_path = request.path
 
         # Forward request to target
         try:
@@ -179,7 +190,9 @@ class ProxyServer:
                 # Apply after_response hook
                 if self.after_response_hook:
                     try:
-                        modified_body = await self.after_response_hook(resp, response_body)
+                        modified_body = await self.after_response_hook(
+                            resp, response_body, original_host, request_path
+                        )
                         if modified_body is not None:
                             response_body = modified_body
                     except Exception as e:

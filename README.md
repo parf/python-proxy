@@ -8,6 +8,7 @@ Transparent Python HTTP Proxy (similar to nginx) with powerful request/response 
 - **Request Modification**: Modify requests before they're proxied (headers, body, URL, etc.)
 - **Response Modification**: Modify responses after receiving from target (HTML injection, content replacement, etc.)
 - **Hook System**: Simple Python-based hook system with automatic discovery
+- **Configuration-Based Hooks**: Powerful built-in hooks (redirects, rewrites, HTML/text transformation) via YAML config - no coding required!
 - **Flexible Configuration**: Configure via CLI arguments, environment variables, or YAML config file
 - **Header-Based Routing**: Route requests to different targets using `X-Proxy-Target` header
 
@@ -156,9 +157,51 @@ curl -x http://localhost:8080 http://myapp.com.local/
 
 Then requests to `api.example.com.local:8080` go through your proxy to `api.example.com:80`.
 
-## Creating Hooks
+## Configuration-Based Hooks (New!)
 
-Hooks are Python files placed in a hooks directory. They allow you to modify requests and responses.
+Configure powerful hooks directly in your YAML config - no Python coding required! Perfect for redirects, URL rewrites, content modification, and more.
+
+### Quick Example
+
+```yaml
+# config.yaml
+host: "0.0.0.0"
+port: 8080
+
+hook_mappings:
+  # Pre-hooks (execute before backend, can skip backend call)
+  pre_hooks:
+    - hostname: "example.com"
+      url_pattern: "/old-page"
+      hook: "redirect_301"
+      params:
+        location: "https://example.com/new-page"
+
+  # Post-hooks (execute after backend, modify response)
+  post_hooks:
+    - hostname: "example.com"
+      url_pattern: "/*"
+      hook: "text_rewrite"
+      params:
+        pattern: "OldCompany"
+        replacement: "NewCompany"
+```
+
+**Built-in hooks include:**
+- **Pre-hooks**: `redirect_301`, `redirect_302`, `gone_410`, `not_found_404`
+- **Post-hooks**: `url_rewrite`, `text_rewrite`, `html_rewrite`
+
+**Features:**
+- Hostname patterns with wildcards (`*.example.com`)
+- URL patterns with glob (`/api/*`) or regex (`regex:^/api/v[0-9]+/`)
+- Pre-hooks can skip backend calls (redirects, errors)
+- Post-hooks modify content (HTML, text, JSON)
+
+See [examples/HOOKS.md](examples/HOOKS.md) for complete documentation and [examples/config_with_hooks.yaml](examples/config_with_hooks.yaml) for a working example.
+
+## Creating Custom Python Hooks
+
+For advanced use cases, you can write custom Python hooks. Place them in a hooks directory.
 
 ### Simple Hook Example
 

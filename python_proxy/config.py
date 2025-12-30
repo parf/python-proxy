@@ -2,7 +2,7 @@
 
 import os
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 import yaml
 
@@ -18,6 +18,7 @@ class Config:
         timeout: int = 30,
         hooks_dir: Optional[str] = None,
         log_level: str = "INFO",
+        hook_mappings: Optional[Dict[str, List[Dict[str, Any]]]] = None,
     ):
         """Initialize configuration.
 
@@ -28,6 +29,7 @@ class Config:
             timeout: Request timeout in seconds
             hooks_dir: Directory containing hook modules
             log_level: Logging level (DEBUG, INFO, WARNING, ERROR)
+            hook_mappings: Hook routing configuration with pre_hooks and post_hooks
         """
         self.host = host
         self.port = port
@@ -35,6 +37,7 @@ class Config:
         self.timeout = timeout
         self.hooks_dir = hooks_dir
         self.log_level = log_level
+        self.hook_mappings = hook_mappings or {"pre_hooks": [], "post_hooks": []}
 
     @classmethod
     def from_file(cls, config_path: str) -> "Config":
@@ -84,4 +87,5 @@ class Config:
             "timeout": self.timeout,
             "hooks_dir": self.hooks_dir,
             "log_level": self.log_level,
+            "hook_mappings": self.hook_mappings,
         }
