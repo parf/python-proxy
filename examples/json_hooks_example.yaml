@@ -1,0 +1,287 @@
+# Example configuration demonstrating JSON modification hooks
+# Shows how to add, delete, and modify JSON nodes in API responses
+
+host: "0.0.0.0"
+port: 8080
+log_level: "INFO"
+
+hook_mappings:
+  post_hooks:
+    # ============================================================================
+    # ADDING JSON NODES
+    # ============================================================================
+
+    # Add a new field to user object
+    - hostname: "api.example.com"
+      url_pattern: "/users/*"
+      hook: "json_modify"
+      params:
+        path: "user.verified"
+        action: "set"
+        value: true
+
+    # Add a new nested field
+    - hostname: "api.example.com"
+      url_pattern: "/users/*"
+      hook: "json_modify"
+      params:
+        path: "user.profile.avatar_url"
+        action: "set"
+        value: "https://cdn.example.com/default-avatar.png"
+
+    # Add metadata to response
+    - hostname: "api.example.com"
+      url_pattern: "/api/*"
+      hook: "json_modify"
+      params:
+        path: "metadata.proxy_version"
+        action: "set"
+        value: "1.0.0"
+
+    # Add timestamp to all API responses
+    - hostname: "api.example.com"
+      url_pattern: "/api/v2/*"
+      hook: "json_modify"
+      params:
+        path: "timestamp"
+        action: "set"
+        value: "2024-01-01T00:00:00Z"
+
+    # ============================================================================
+    # DELETING JSON NODES
+    # ============================================================================
+
+    # Remove password field from user responses
+    - hostname: "api.example.com"
+      url_pattern: "/users/*"
+      hook: "json_modify"
+      params:
+        path: "user.password"
+        action: "delete"
+
+    # Remove sensitive fields
+    - hostname: "api.example.com"
+      url_pattern: "/users/*"
+      hook: "json_modify"
+      params:
+        path: "user.ssn"
+        action: "delete"
+
+    # Remove internal metadata
+    - hostname: "api.example.com"
+      url_pattern: "/api/*"
+      hook: "json_modify"
+      params:
+        path: "_internal"
+        action: "delete"
+
+    # Remove API key from responses
+    - hostname: "api.example.com"
+      url_pattern: "/config"
+      hook: "json_modify"
+      params:
+        path: "api_key"
+        action: "delete"
+
+    # ============================================================================
+    # MODIFYING JSON NODES
+    # ============================================================================
+
+    # Change user status
+    - hostname: "api.example.com"
+      url_pattern: "/users/inactive/*"
+      hook: "json_modify"
+      params:
+        path: "user.status"
+        action: "set"
+        value: "inactive"
+
+    # Override API version in response
+    - hostname: "api.example.com"
+      url_pattern: "/api/v1/*"
+      hook: "json_modify"
+      params:
+        path: "version"
+        action: "set"
+        value: "v2.0"
+
+    # Change price in product listing
+    - hostname: "api.example.com"
+      url_pattern: "/products/sale/*"
+      hook: "json_modify"
+      params:
+        path: "product.price"
+        action: "set"
+        value: 19.99
+
+    # Modify array element
+    - hostname: "api.example.com"
+      url_pattern: "/items/*"
+      hook: "json_modify"
+      params:
+        path: "items[0].quantity"
+        action: "set"
+        value: 100
+
+    # ============================================================================
+    # APPENDING TO ARRAYS
+    # ============================================================================
+
+    # Add tag to user
+    - hostname: "api.example.com"
+      url_pattern: "/users/*"
+      hook: "json_modify"
+      params:
+        path: "user.tags"
+        action: "append"
+        value: "premium"
+
+    # Add role to user roles array
+    - hostname: "api.example.com"
+      url_pattern: "/users/*/roles"
+      hook: "json_modify"
+      params:
+        path: "roles"
+        action: "append"
+        value: "viewer"
+
+    # Add notification to array
+    - hostname: "api.example.com"
+      url_pattern: "/notifications"
+      hook: "json_modify"
+      params:
+        path: "notifications"
+        action: "append"
+        value:
+          id: "new-notification"
+          type: "info"
+          message: "System maintenance scheduled"
+
+    # ============================================================================
+    # INCREMENTING COUNTERS
+    # ============================================================================
+
+    # Increment view count
+    - hostname: "api.example.com"
+      url_pattern: "/posts/*"
+      hook: "json_modify"
+      params:
+        path: "post.views"
+        action: "increment"
+        value: 1
+
+    # Increment likes
+    - hostname: "api.example.com"
+      url_pattern: "/posts/*/like"
+      hook: "json_modify"
+      params:
+        path: "post.likes"
+        action: "increment"
+        value: 1
+
+    # Decrement stock (negative increment)
+    - hostname: "api.example.com"
+      url_pattern: "/products/*/purchase"
+      hook: "json_modify"
+      params:
+        path: "product.stock"
+        action: "increment"
+        value: -1
+
+    # ============================================================================
+    # COMPLEX EXAMPLES - COMBINING MULTIPLE OPERATIONS
+    # ============================================================================
+
+    # Example: Sanitize user data (remove sensitive fields, add defaults)
+    # First remove password
+    - hostname: "api.example.com"
+      url_pattern: "/users/*/profile"
+      hook: "json_modify"
+      params:
+        path: "password_hash"
+        action: "delete"
+
+    # Then remove email
+    - hostname: "api.example.com"
+      url_pattern: "/users/*/profile"
+      hook: "json_modify"
+      params:
+        path: "email_verified_token"
+        action: "delete"
+
+    # Add public flag
+    - hostname: "api.example.com"
+      url_pattern: "/users/*/profile"
+      hook: "json_modify"
+      params:
+        path: "is_public_profile"
+        action: "set"
+        value: true
+
+    # Example: Transform API response structure
+    # Add success status to all API responses
+    - hostname: "api.example.com"
+      url_pattern: "/api/v2/*"
+      hook: "json_modify"
+      params:
+        path: "success"
+        action: "set"
+        value: true
+
+    # Example: A/B Testing - modify product prices
+    - hostname: "shop.example.com"
+      url_pattern: "/products/*"
+      hook: "json_modify"
+      params:
+        path: "product.original_price"
+        action: "set"
+        value: 29.99
+
+    # Then set discounted price
+    - hostname: "shop.example.com"
+      url_pattern: "/products/*"
+      hook: "json_modify"
+      params:
+        path: "product.sale_price"
+        action: "set"
+        value: 19.99
+
+# ============================================================================
+# REAL-WORLD USE CASES
+# ============================================================================
+#
+# 1. API Response Sanitization:
+#    - Remove sensitive fields (passwords, API keys, tokens)
+#    - Hide internal metadata from public APIs
+#
+# 2. Response Enhancement:
+#    - Add computed fields (e.g., full_name from first + last)
+#    - Add metadata (timestamps, versions, proxy info)
+#    - Add default values for missing fields
+#
+# 3. A/B Testing:
+#    - Modify prices for different user segments
+#    - Change feature flags in responses
+#    - Test different API response structures
+#
+# 4. Analytics:
+#    - Increment view counters
+#    - Track API usage in response metadata
+#    - Add tracking IDs to responses
+#
+# 5. Backward Compatibility:
+#    - Transform new API format to legacy format
+#    - Add deprecated fields for old clients
+#    - Rename fields to match old API contracts
+#
+# 6. Development/Testing:
+#    - Mock specific field values
+#    - Force error conditions (set status to "error")
+#    - Simulate different user states
+#
+# 7. Multi-tenancy:
+#    - Add tenant IDs to all responses
+#    - Filter out cross-tenant data
+#    - Inject tenant-specific configuration
+#
+# ============================================================================

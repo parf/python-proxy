@@ -189,7 +189,7 @@ hook_mappings:
 
 **Built-in hooks include:**
 - **Pre-hooks**: `redirect_301`, `redirect_302`, `gone_410`, `not_found_404`, `static_html`
-- **Post-hooks**: `url_rewrite`, `text_rewrite`, `link_rewrite`, `html_rewrite`, `xpath_replace_from_url`
+- **Post-hooks**: `url_rewrite`, `text_rewrite`, `link_rewrite`, `html_rewrite`, `xpath_replace_from_url`, `json_modify`
 
 **Features:**
 - Hostname patterns with wildcards (`*.example.com`)

@@ -1,6 +1,7 @@
 """Built-in hooks for common proxy operations."""
 
 import asyncio
+import json
 import logging
 import re
 from pathlib import Path
@@ -703,6 +704,210 @@ async def xpath_replace_from_url(
         return body
 
 
+async def json_modify(
+    response: web.Response,
+    body: bytes,
+    params: Dict[str, Any],
+) -> bytes:
+    """Modify JSON response by adding, deleting, or modifying nodes.
+
+    Supports JSONPath-like syntax for selecting nodes in the JSON structure.
+
+    Params:
+        path: JSON path to the node (e.g., "user.name", "items[0].price", "users[*].status")
+        action: Operation to perform (set, delete, append, increment)
+        value: Value for set/append operations (optional for delete)
+
+    Actions:
+        - set: Set a value (creates if doesn't exist)
+        - delete: Remove a field or array element
+        - append: Add to an array
+        - increment: Increment a numeric value by amount (default 1)
+
+    Examples:
+        # Set a value
+        path: "user.email"
+        action: "set"
+        value: "new@example.com"
+
+        # Delete a field
+        path: "user.password"
+        action: "delete"
+
+        # Append to array
+        path: "tags"
+        action: "append"
+        value: "new-tag"
+
+        # Increment counter
+        path: "views"
+        action: "increment"
+        value: 1
+    """
+    try:
+        content_type = response.headers.get("Content-Type", "")
+        if "application/json" not in content_type:
+            return body
+
+        # Parse JSON
+        text = body.decode("utf-8", errors="ignore")
+        data = json.loads(text)
+
+        path = params.get("path")
+        action = params.get("action", "set")
+        value = params.get("value")
+
+        if not path:
+            logger.warning("json_modify: path parameter is required")
+            return body
+
+        # Parse path and navigate to target
+        modified = _modify_json_path(data, path, action, value)
+
+        if modified:
+            logger.info(f"json_modify: Applied {action} to path '{path}'")
+            result = json.dumps(data, ensure_ascii=False, indent=2)
+            return result.encode("utf-8")
+
+        return body
+
+    except json.JSONDecodeError as e:
+        logger.error(f"json_modify: Invalid JSON - {e}")
+        return body
+    except Exception as e:
+        logger.error(f"json_modify error: {e}")
+        return body
+
+
+def _modify_json_path(data: Any, path: str, action: str, value: Any) -> bool:
+    """Modify JSON data at specified path.
+
+    Args:
+        data: JSON data structure
+        path: Dot-notation path (e.g., "user.name", "items[0].price")
+        action: Operation (set, delete, append, increment)
+        value: Value for operation
+
+    Returns:
+        True if modification was made, False otherwise
+    """
+    # Split path into segments
+    segments = _parse_json_path(path)
+
+    if not segments:
+        return False
+
+    # Navigate to parent of target
+    current = data
+    for i, segment in enumerate(segments[:-1]):
+        if isinstance(segment, int):
+            # Array index
+            if not isinstance(current, list) or segment >= len(current):
+                return False
+            current = current[segment]
+        else:
+            # Object key
+            if not isinstance(current, dict):
+                return False
+            if segment not in current:
+                # Create intermediate objects as needed for set operations
+                if action == "set":
+                    current[segment] = {}
+                else:
+                    return False
+            current = current[segment]
+
+    # Apply action to final segment
+    final_segment = segments[-1]
+
+    if action == "set":
+        if isinstance(final_segment, int):
+            if isinstance(current, list):
+                if final_segment < len(current):
+                    current[final_segment] = value
+                    return True
+        else:
+            if isinstance(current, dict):
+                current[final_segment] = value
+                return True
+
+    elif action == "delete":
+        if isinstance(final_segment, int):
+            if isinstance(current, list) and final_segment < len(current):
+                del current[final_segment]
+                return True
+        else:
+            if isinstance(current, dict) and final_segment in current:
+                del current[final_segment]
+                return True
+
+    elif action == "append":
+        if isinstance(final_segment, str):
+            target = current.get(final_segment)
+            if isinstance(target, list):
+                target.append(value)
+                return True
+            elif target is None and isinstance(current, dict):
+                # Create new array
+                current[final_segment] = [value]
+                return True
+
+    elif action == "increment":
+        amount = value if value is not None else 1
+        if isinstance(final_segment, int):
+            if isinstance(current, list) and final_segment < len(current):
+                if isinstance(current[final_segment], (int, float)):
+                    current[final_segment] += amount
+                    return True
+        else:
+            if isinstance(current, dict) and final_segment in current:
+                if isinstance(current[final_segment], (int, float)):
+                    current[final_segment] += amount
+                    return True
+
+    return False
+
+
+def _parse_json_path(path: str) -> list:
+    """Parse JSON path into segments.
+
+    Examples:
+        "user.name" -> ["user", "name"]
+        "items[0].price" -> ["items", 0, "price"]
+        "users[*].status" -> ["users", "*", "status"]
+
+    Args:
+        path: Dot-notation path with optional array indices
+
+    Returns:
+        List of path segments (strings and ints)
+    """
+    segments = []
+    parts = path.split(".")
+
+    for part in parts:
+        # Check for array index notation
+        if "[" in part and "]" in part:
+            # Split into key and index
+            key, rest = part.split("[", 1)
+            if key:
+                segments.append(key)
+
+            # Extract index
+            index_str = rest.split("]", 1)[0]
+            if index_str == "*":
+                segments.append("*")
+            else:
+                try:
+                    segments.append(int(index_str))
+                except ValueError:
+                    segments.append(index_str)
+        else:
+            segments.append(part)
+
+    return segments
+
+
 # Hook registry for easy lookup
 BUILTIN_PRE_HOOKS = {
     "redirect_301": redirect_301,
@@ -718,4 +923,5 @@ BUILTIN_POST_HOOKS = {
     "html_rewrite": html_rewrite,
     "link_rewrite": link_rewrite,
     "xpath_replace_from_url": xpath_replace_from_url,
+    "json_modify": json_modify,
 }

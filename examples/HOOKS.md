@@ -498,6 +498,140 @@ post_hooks:
       action: "replace_element"
 ```
 
+### json_modify
+
+Modify JSON responses by adding, deleting, or modifying fields. Perfect for API response manipulation, sanitization, and testing.
+
+**Parameters:**
+- `path` (required): JSON path to the node (e.g., "user.name", "items[0].price")
+- `action` (required): Operation to perform
+  - `set`: Set a value (creates nested objects if needed)
+  - `delete`: Remove a field or array element
+  - `append`: Add item to an array
+  - `increment`: Increment numeric value by amount
+- `value` (optional): Value for set/append/increment operations
+
+**Path Syntax:**
+- Dot notation: `"user.profile.name"`
+- Array indices: `"items[0].price"`
+- Nested: `"data.users[0].email"`
+
+**Examples:**
+
+```yaml
+post_hooks:
+  # Add a new field
+  - hostname: "api.example.com"
+    url_pattern: "/users/*"
+    hook: "json_modify"
+    params:
+      path: "user.verified"
+      action: "set"
+      value: true
+
+  # Add nested field (creates intermediate objects)
+  - hostname: "api.example.com"
+    url_pattern: "/users/*"
+    hook: "json_modify"
+    params:
+      path: "user.profile.avatar_url"
+      action: "set"
+      value: "https://cdn.example.com/default-avatar.png"
+
+  # Delete sensitive field
+  - hostname: "api.example.com"
+    url_pattern: "/users/*"
+    hook: "json_modify"
+    params:
+      path: "user.password"
+      action: "delete"
+
+  # Delete API key from config
+  - hostname: "api.example.com"
+    url_pattern: "/config"
+    hook: "json_modify"
+    params:
+      path: "api_key"
+      action: "delete"
+
+  # Modify existing value
+  - hostname: "api.example.com"
+    url_pattern: "/users/*"
+    hook: "json_modify"
+    params:
+      path: "user.status"
+      action: "set"
+      value: "active"
+
+  # Modify array element
+  - hostname: "api.example.com"
+    url_pattern: "/products/*"
+    hook: "json_modify"
+    params:
+      path: "items[0].quantity"
+      action: "set"
+      value: 100
+
+  # Append to array
+  - hostname: "api.example.com"
+    url_pattern: "/users/*"
+    hook: "json_modify"
+    params:
+      path: "user.tags"
+      action: "append"
+      value: "premium"
+
+  # Append object to array
+  - hostname: "api.example.com"
+    url_pattern: "/notifications"
+    hook: "json_modify"
+    params:
+      path: "notifications"
+      action: "append"
+      value:
+        id: "notification-123"
+        type: "info"
+        message: "Welcome!"
+
+  # Increment counter
+  - hostname: "api.example.com"
+    url_pattern: "/posts/*"
+    hook: "json_modify"
+    params:
+      path: "post.views"
+      action: "increment"
+      value: 1
+
+  # Decrement stock
+  - hostname: "api.example.com"
+    url_pattern: "/products/*/purchase"
+    hook: "json_modify"
+    params:
+      path: "product.stock"
+      action: "increment"
+      value: -1
+
+  # Add metadata to all API responses
+  - hostname: "api.example.com"
+    url_pattern: "/api/*"
+    hook: "json_modify"
+    params:
+      path: "metadata.proxy_version"
+      action: "set"
+      value: "1.0.0"
+```
+
+**Use Cases:**
+- **Sanitization**: Remove passwords, tokens, API keys from responses
+- **Enhancement**: Add computed fields, metadata, timestamps
+- **A/B Testing**: Modify prices, features, configurations
+- **Analytics**: Increment counters, add tracking IDs
+- **Compatibility**: Transform API structure for legacy clients
+- **Development**: Mock field values, test edge cases
+- **Multi-tenancy**: Add tenant IDs, filter data
+
+See [json_hooks_example.yaml](json_hooks_example.yaml) for comprehensive examples of all JSON operations.
+
 ## Complete Example
 
 Here's a complete configuration file demonstrating various hooks:
