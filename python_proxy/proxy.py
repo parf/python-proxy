@@ -76,7 +76,6 @@ class ProxyServer:
 
         Supports multiple ways to specify the target:
         - X-Proxy-Server: host or host:port (e.g., "example.com" or "example.com:8080")
-        - X-Proxy-Target: full URL (e.g., "http://example.com")
         - Default target_host from configuration
         - Automatic .local domain handling: example.com.local -> example.com
 
@@ -88,7 +87,6 @@ class ProxyServer:
         """
         # Determine target URL
         proxy_server = request.headers.get("X-Proxy-Server")
-        proxy_target = request.headers.get("X-Proxy-Target")
         proxy_host_override = request.headers.get("X-Proxy-Host")
 
         # Check if request is for a .local domain (automatic routing)
@@ -110,7 +108,7 @@ class ProxyServer:
 
                 # If no explicit proxy headers, auto-route to stripped hostname
                 # Port will default to 80 (set by proxy_server logic below)
-                if not proxy_server and not proxy_target:
+                if not proxy_server:
                     proxy_server = stripped_host
 
         # Build target URL based on available headers
@@ -128,10 +126,6 @@ class ProxyServer:
             port_suffix = f":{port}" if port not in (80, 443) else ""
             target_base = f"{scheme}://{host}{port_suffix}"
 
-        elif proxy_target:
-            # X-Proxy-Target: full URL (legacy support)
-            target_base = proxy_target.rstrip("/")
-
         elif self.target_host:
             # Default target from configuration
             target_base = self.target_host.rstrip("/")
@@ -140,7 +134,7 @@ class ProxyServer:
             return web.Response(
                 text=(
                     "No target host specified. "
-                    "Set X-Proxy-Server, X-Proxy-Target header, or configure default target."
+                    "Set X-Proxy-Server header or configure default target."
                 ),
                 status=400,
             )
@@ -159,7 +153,7 @@ class ProxyServer:
         }
 
         # Remove proxy control headers
-        for header in ["X-Proxy-Server", "X-Proxy-Target", "X-Proxy-Host"]:
+        for header in ["X-Proxy-Server", "X-Proxy-Host"]:
             request_data["headers"].pop(header, None)
 
         # Remove Host header (will be set by aiohttp automatically)

@@ -242,35 +242,6 @@ class TestProxyServer(AioHTTPTestCase):
         finally:
             await proxy.stop()
 
-    async def test_proxy_target_header_legacy(self):
-        """Test X-Proxy-Target header still works (legacy support)."""
-        from unittest.mock import MagicMock
-
-        port = unused_port()
-        proxy = ProxyServer(host="127.0.0.1", port=port)
-        await proxy.start()
-
-        try:
-            backend_url = f"http://{self.server.host}:{self.server.port}"
-
-            mock_request = MagicMock()
-            mock_request.headers = {"X-Proxy-Target": backend_url}
-            mock_request.match_info = {"path": "hello"}
-            mock_request.method = "GET"
-            mock_request.query_string = ""
-
-            async def mock_read():
-                return b""
-
-            mock_request.read = mock_read
-
-            response = await proxy.handle_request(mock_request)
-            text = response.body.decode()
-            assert response.status == 200
-            assert "Hello, World!" in text
-        finally:
-            await proxy.stop()
-
     async def test_local_domain_stripping(self):
         """Test automatic .local domain suffix stripping."""
         from unittest.mock import MagicMock

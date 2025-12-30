@@ -22,7 +22,7 @@ The extensible architecture supports both simple one-line configuration changes 
 - **Hook System**: Simple Python-based hook system with automatic discovery
 - **Configuration-Based Hooks**: Powerful built-in hooks (redirects, rewrites, HTML/text transformation) via YAML config - no coding required!
 - **Flexible Configuration**: Configure via CLI arguments, environment variables, or YAML config file
-- **Header-Based Routing**: Route requests to different targets using `X-Proxy-Target` header
+- **Header-Based Routing**: Route requests to different targets using `X-Proxy-Server` header
 
 ## Installation
 
@@ -87,10 +87,9 @@ python-proxy
 
 The proxy supports multiple ways to specify the backend target:
 
-1. **X-Proxy-Server** - Simple host or host:port format (recommended)
-2. **X-Proxy-Target** - Full URL with scheme (legacy)
-3. **Default target** - Configured via CLI or config file
-4. **Automatic .local domains** - Requests to `hostname.local` automatically route to `hostname`
+1. **X-Proxy-Server** - Simple host or host:port format
+2. **Default target** - Configured via CLI or config file
+3. **Automatic .local domains** - Requests to `hostname.local` automatically route to `hostname`
 
 ```bash
 # Using X-Proxy-Server (simple format)
@@ -101,11 +100,6 @@ curl -x http://localhost:8080 \
 # Using X-Proxy-Server with custom port
 curl -x http://localhost:8080 \
      -H "X-Proxy-Server: example.com:8080" \
-     http://example.com/page
-
-# Using X-Proxy-Target (full URL)
-curl -x http://localhost:8080 \
-     -H "X-Proxy-Target: http://example.com" \
      http://example.com/page
 
 # Override the Host header sent to backend
@@ -124,10 +118,6 @@ curl -x http://localhost:8080 http://example.com/page
   - Default port: 80 (http) if not specified
   - Port 443 automatically uses HTTPS
   - Examples: `example.com`, `example.com:8080`, `192.168.1.100:3000`
-
-- **X-Proxy-Target**: Full backend URL (legacy, but still supported)
-  - Must include scheme (http:// or https://)
-  - Example: `http://example.com:8080`
 
 - **X-Proxy-Host**: Override the Host header sent to backend server
   - Useful for virtual hosting or when backend expects specific hostname

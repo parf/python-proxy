@@ -4,7 +4,7 @@ This guide shows how to configure nginx to proxy traffic through python-proxy, l
 
 ## Overview
 
-Nginx acts as the frontend server, forwarding requests to python-proxy with special headers (`X-Proxy-Server` or `X-Proxy-Target`). Python-proxy then applies configured hooks before proxying to the actual backend.
+Nginx acts as the frontend server, forwarding requests to python-proxy with the `X-Proxy-Server` header. Python-proxy then applies configured hooks before proxying to the actual backend.
 
 **Architecture:**
 ```
@@ -102,31 +102,9 @@ server {
 }
 ```
 
-### Example 3: Using X-Proxy-Target (Full URL)
-
-Use `X-Proxy-Target` when you need to specify the full backend URL including scheme.
-
-**nginx.conf:**
-```nginx
-server {
-    listen 80;
-    server_name example.com;
-
-    location / {
-        proxy_pass http://python-proxy-ip:8080;
-
-        # Full URL including scheme
-        proxy_set_header X-Proxy-Target https://secure-backend.example.com;
-
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-}
-```
-
 ## Advanced Configurations
 
-### Example 4: Route Different Paths to Different Backends
+### Example 3: Route Different Paths to Different Backends
 
 Route different URL patterns to different backend servers through python-proxy.
 
@@ -153,7 +131,7 @@ server {
     # Admin panel goes to admin backend with HTTPS
     location /admin/ {
         proxy_pass http://python-proxy-ip:8080;
-        proxy_set_header X-Proxy-Target https://admin.backend.local;
+        proxy_set_header X-Proxy-Server admin.backend.local:443;
         proxy_set_header Host $host;
     }
 
@@ -166,7 +144,7 @@ server {
 }
 ```
 
-### Example 5: Dynamic Backend Based on Request
+### Example 4: Dynamic Backend Based on Request
 
 Use nginx variables to dynamically set the backend server.
 
@@ -193,7 +171,7 @@ server {
 }
 ```
 
-### Example 6: Override Backend Host Header
+### Example 5: Override Backend Host Header
 
 Use `X-Proxy-Host` to override the Host header sent to the backend.
 
@@ -218,7 +196,7 @@ server {
 }
 ```
 
-### Example 7: Load Balancing with Python-Proxy
+### Example 6: Load Balancing with Python-Proxy
 
 Combine nginx load balancing with python-proxy hooks.
 
@@ -556,7 +534,6 @@ server {
     location / {
         # Remove any client-set proxy headers
         proxy_set_header X-Proxy-Server "";
-        proxy_set_header X-Proxy-Target "";
         proxy_set_header X-Proxy-Host "";
 
         # Set your own backend
