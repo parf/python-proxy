@@ -1,9 +1,12 @@
 """Built-in hooks for common proxy operations."""
 
+import asyncio
 import logging
 import re
+from pathlib import Path
 from typing import Any, Dict, Optional
 
+import aiohttp
 from aiohttp import web
 from lxml import html as lxml_html
 
@@ -147,6 +150,66 @@ async def not_found_404(
             text=message,
             content_type="text/plain",
         )
+
+
+async def static_html(
+    request: web.Request,
+    request_data: Dict[str, Any],
+    params: Dict[str, Any],
+) -> Optional[web.Response]:
+    """Return static HTML content without calling backend.
+
+    Useful for serving custom pages, maintenance pages, or static content.
+
+    Params:
+        html: HTML content to return (inline or from file)
+        file: Path to HTML file (alternative to inline html)
+        status: HTTP status code (default: 200)
+        content_type: Content type (default: "text/html")
+
+    Example configs:
+        # Inline HTML
+        hook: static_html
+        params:
+          html: '<html><body><h1>Maintenance Mode</h1></body></html>'
+          status: 503
+
+        # From file
+        hook: static_html
+        params:
+          file: '/path/to/page.html'
+          status: 200
+    """
+    html_content = params.get("html")
+    file_path = params.get("file")
+    status = params.get("status", 200)
+    content_type = params.get("content_type", "text/html")
+
+    # Get HTML content from inline or file
+    if html_content:
+        # Use inline HTML
+        pass
+    elif file_path:
+        # Load from file
+        try:
+            path = Path(file_path)
+            if not path.exists():
+                logger.error(f"static_html: File not found: {file_path}")
+                return None
+            html_content = path.read_text(encoding="utf-8")
+        except Exception as e:
+            logger.error(f"static_html: Error reading file {file_path}: {e}")
+            return None
+    else:
+        logger.error("static_html: missing 'html' or 'file' parameter")
+        return None
+
+    logger.info(f"static_html: Returning static content for {request.path}")
+    return web.Response(
+        status=status,
+        text=html_content,
+        content_type=content_type,
+    )
 
 
 # ============================================================================
@@ -373,16 +436,286 @@ async def html_rewrite(
         return body
 
 
+async def link_rewrite(
+    response: web.Response,
+    body: bytes,
+    params: Dict[str, Any],
+) -> bytes:
+    """Rewrite domain names in all HTML links and resources.
+
+    Replaces hostnames in href, src, and other URL attributes throughout the HTML.
+    Perfect for changing domains (e.g., realmo.com -> realmo.com.local) or creating
+    local testing environments.
+
+    Params:
+        from_domain: Domain to replace (e.g., "realmo.com")
+        to_domain: Replacement domain (e.g., "realmo.com.local")
+        attributes: List of attributes to rewrite (default: ["href", "src", "action", "data"])
+        case_sensitive: Whether matching is case-sensitive (default: false)
+
+    Example configs:
+        # Add .local suffix for local testing
+        hook: link_rewrite
+        params:
+          from_domain: "realmo.com"
+          to_domain: "realmo.com.local"
+
+        # Replace domain completely
+        hook: link_rewrite
+        params:
+          from_domain: "old-domain.com"
+          to_domain: "new-domain.com"
+          attributes: ["href", "src", "action", "data", "poster"]
+    """
+    from_domain = params.get("from_domain")
+    to_domain = params.get("to_domain")
+
+    if not from_domain or not to_domain:
+        logger.error("link_rewrite: missing 'from_domain' or 'to_domain' parameter")
+        return body
+
+    # Check content type
+    content_type = response.headers.get("Content-Type", "")
+    if "text/html" not in content_type:
+        return body
+
+    # Get attributes to rewrite
+    attributes = params.get("attributes", ["href", "src", "action", "data"])
+    case_sensitive = params.get("case_sensitive", False)
+
+    try:
+        text = body.decode("utf-8", errors="ignore")
+        tree = lxml_html.fromstring(text)
+        modified = False
+
+        # Build XPath query for all specified attributes
+        xpath_parts = [f".//*[@{attr}]" for attr in attributes]
+        xpath_query = " | ".join(xpath_parts)
+
+        elements = tree.xpath(xpath_query)
+
+        for element in elements:
+            for attr in attributes:
+                if attr not in element.attrib:
+                    continue
+
+                original_value = element.get(attr, "")
+                if not original_value:
+                    continue
+
+                # Replace domain in the attribute value
+                # Handle various URL formats: //domain, http://domain, https://domain
+                new_value = original_value
+
+                # Escape special regex characters in domains
+                from_escaped = re.escape(from_domain)
+
+                # Prepare replacement flags
+                flags = 0 if case_sensitive else re.IGNORECASE
+
+                # Replace protocol-relative URLs
+                new_value = re.sub(
+                    f"//({from_escaped})",
+                    f"//{to_domain}",
+                    new_value,
+                    flags=flags,
+                )
+                # Replace http URLs
+                new_value = re.sub(
+                    f"http://({from_escaped})",
+                    f"http://{to_domain}",
+                    new_value,
+                    flags=flags,
+                )
+                # Replace https URLs
+                new_value = re.sub(
+                    f"https://({from_escaped})",
+                    f"https://{to_domain}",
+                    new_value,
+                    flags=flags,
+                )
+
+                if new_value != original_value:
+                    element.set(attr, new_value)
+                    modified = True
+
+        if modified:
+            logger.info(f"link_rewrite: Replaced {from_domain} with {to_domain}")
+            result = lxml_html.tostring(tree, encoding="unicode")
+            return result.encode("utf-8")
+
+        return body
+
+    except Exception as e:
+        logger.error(f"link_rewrite error: {e}")
+        return body
+
+
+async def xpath_replace_from_url(
+    response: web.Response,
+    body: bytes,
+    params: Dict[str, Any],
+) -> bytes:
+    """Fetch content from external URL and replace XPath content in response.
+
+    Fetches content from a source URL, extracts specific elements using XPath,
+    and replaces elements in the current response. Perfect for combining content
+    from multiple sources (e.g., WordPress articles into another site).
+
+    Params:
+        target_xpath: XPath in the response where content will be placed
+        source_url: URL to fetch content from
+        source_xpath: XPath to extract from the source URL
+        action: How to replace content (default: "replace_content")
+                - replace_content: Replace element's content with source content
+                - replace_element: Replace entire element with source element
+                - insert_before: Insert source before target element
+                - insert_after: Insert source after target element
+        timeout: Request timeout in seconds (default: 10)
+
+    Example configs:
+        # Get WordPress article and place it on another site
+        hook: xpath_replace_from_url
+        params:
+          target_xpath: '//div[@id="article-content"]'
+          source_url: 'https://wordpress-blog.com/article/123'
+          source_xpath: '//article[@class="post-content"]'
+          action: 'replace_content'
+
+        # Insert external content before an element
+        hook: xpath_replace_from_url
+        params:
+          target_xpath: '//main'
+          source_url: 'https://api.example.com/banner'
+          source_xpath: '//div[@class="banner"]'
+          action: 'insert_before'
+    """
+    target_xpath = params.get("target_xpath")
+    source_url = params.get("source_url")
+    source_xpath = params.get("source_xpath")
+    action = params.get("action", "replace_content")
+    timeout = params.get("timeout", 10)
+
+    if not target_xpath or not source_url or not source_xpath:
+        logger.error(
+            "xpath_replace_from_url: missing 'target_xpath', 'source_url', or 'source_xpath'"
+        )
+        return body
+
+    # Check content type
+    content_type = response.headers.get("Content-Type", "")
+    if "text/html" not in content_type:
+        return body
+
+    try:
+        # Parse the response HTML
+        text = body.decode("utf-8", errors="ignore")
+        tree = lxml_html.fromstring(text)
+        target_elements = tree.xpath(target_xpath)
+
+        if not target_elements:
+            logger.debug(f"xpath_replace_from_url: No target elements matched {target_xpath}")
+            return body
+
+        # Fetch content from source URL
+        async with aiohttp.ClientSession() as session:
+            try:
+                async with session.get(
+                    source_url, timeout=aiohttp.ClientTimeout(total=timeout)
+                ) as resp:
+                    if resp.status != 200:
+                        logger.error(
+                            f"xpath_replace_from_url: Source URL returned status {resp.status}"
+                        )
+                        return body
+
+                    source_text = await resp.text()
+                    source_tree = lxml_html.fromstring(source_text)
+                    source_elements = source_tree.xpath(source_xpath)
+
+                    if not source_elements:
+                        logger.warning(
+                            f"xpath_replace_from_url: No source elements matched {source_xpath}"
+                        )
+                        return body
+
+            except asyncio.TimeoutError:
+                logger.error(f"xpath_replace_from_url: Timeout fetching {source_url}")
+                return body
+            except Exception as e:
+                logger.error(f"xpath_replace_from_url: Error fetching {source_url}: {e}")
+                return body
+
+        # Replace content based on action
+        modified = False
+
+        for target_element in target_elements:
+            for source_element in source_elements:
+                if action == "replace_content":
+                    # Replace the content (children) of target with source's content
+                    target_element.clear()
+                    target_element.text = source_element.text
+                    target_element.tail = source_element.tail
+                    for child in source_element:
+                        target_element.append(child)
+                    modified = True
+
+                elif action == "replace_element":
+                    # Replace the entire target element with source element
+                    parent = target_element.getparent()
+                    if parent is not None:
+                        index = parent.index(target_element)
+                        parent.remove(target_element)
+                        parent.insert(index, source_element)
+                        modified = True
+
+                elif action == "insert_before":
+                    # Insert source before target
+                    parent = target_element.getparent()
+                    if parent is not None:
+                        index = parent.index(target_element)
+                        parent.insert(index, source_element)
+                        modified = True
+
+                elif action == "insert_after":
+                    # Insert source after target
+                    parent = target_element.getparent()
+                    if parent is not None:
+                        index = parent.index(target_element)
+                        parent.insert(index + 1, source_element)
+                        modified = True
+
+                # Only use first source element for each target
+                break
+
+        if modified:
+            logger.info(
+                f"xpath_replace_from_url: Replaced content from {source_url} "
+                f"into {target_xpath} with action {action}"
+            )
+            result = lxml_html.tostring(tree, encoding="unicode")
+            return result.encode("utf-8")
+
+        return body
+
+    except Exception as e:
+        logger.error(f"xpath_replace_from_url error: {e}")
+        return body
+
+
 # Hook registry for easy lookup
 BUILTIN_PRE_HOOKS = {
     "redirect_301": redirect_301,
     "redirect_302": redirect_302,
     "gone_410": gone_410,
     "not_found_404": not_found_404,
+    "static_html": static_html,
 }
 
 BUILTIN_POST_HOOKS = {
     "url_rewrite": url_rewrite,
     "text_rewrite": text_rewrite,
     "html_rewrite": html_rewrite,
+    "link_rewrite": link_rewrite,
+    "xpath_replace_from_url": xpath_replace_from_url,
 }

@@ -134,6 +134,44 @@ pre_hooks:
       html: true
 ```
 
+### static_html
+
+Return static HTML content without calling the backend. Perfect for maintenance pages, custom error pages, or serving static content.
+
+**Parameters:**
+- `html` (optional): Inline HTML content to return
+- `file` (optional): Path to HTML file to serve (alternative to inline html)
+- `status` (optional, default: `200`): HTTP status code
+- `content_type` (optional, default: `"text/html"`): Content type header
+
+**Examples:**
+```yaml
+pre_hooks:
+  # Inline maintenance page
+  - hostname: "example.com"
+    url_pattern: "/maintenance"
+    hook: "static_html"
+    params:
+      html: |
+        <!DOCTYPE html>
+        <html>
+        <head><title>Maintenance Mode</title></head>
+        <body>
+          <h1>Site Under Maintenance</h1>
+          <p>We'll be back soon!</p>
+        </body>
+        </html>
+      status: 503
+
+  # Serve from file
+  - hostname: "example.com"
+    url_pattern: "/custom-page"
+    hook: "static_html"
+    params:
+      file: "/var/www/custom-page.html"
+      status: 200
+```
+
 ## Built-In Post-Hooks
 
 Post-hooks execute after receiving the response and modify the content before returning it to the client.
@@ -198,6 +236,45 @@ post_hooks:
       replacement: "XXX-XXX-XXXX"
 ```
 
+### link_rewrite
+
+Rewrite domain names in all HTML links and resources (href, src, action, etc.). Perfect for adding `.local` suffixes, changing CDN domains, or migrating between domains.
+
+**Parameters:**
+- `from_domain` (required): Domain to replace (e.g., "realmo.com")
+- `to_domain` (required): Replacement domain (e.g., "realmo.com.local")
+- `attributes` (optional): List of attributes to rewrite (default: `["href", "src", "action", "data"]`)
+- `case_sensitive` (optional, default: `false`): Whether matching is case-sensitive
+
+**Examples:**
+```yaml
+post_hooks:
+  # Add .local suffix for local testing (perfect for your use case!)
+  - hostname: "realmo.com.local"
+    url_pattern: "/*"
+    hook: "link_rewrite"
+    params:
+      from_domain: "realmo.com"
+      to_domain: "realmo.com.local"
+
+  # Replace CDN domain
+  - hostname: "example.com"
+    url_pattern: "/*"
+    hook: "link_rewrite"
+    params:
+      from_domain: "old-cdn.com"
+      to_domain: "new-cdn.com"
+      attributes: ["href", "src", "action", "data", "poster"]
+
+  # Domain migration
+  - hostname: "new-domain.com"
+    url_pattern: "/*"
+    hook: "link_rewrite"
+    params:
+      from_domain: "old-domain.com"
+      to_domain: "new-domain.com"
+```
+
 ### html_rewrite
 
 Rewrite HTML content using XPath selectors. Powerful for precise HTML modifications.
@@ -251,6 +328,57 @@ post_hooks:
       xpath: "//head"
       action: "insert_before"
       value: '<script>console.log("Analytics loaded");</script>'
+```
+
+### xpath_replace_from_url
+
+Fetch content from an external URL and replace XPath content in the response. Perfect for combining content from multiple sources, such as fetching WordPress articles and inserting them into another site.
+
+**Parameters:**
+- `target_xpath` (required): XPath in the response where content will be placed
+- `source_url` (required): URL to fetch content from
+- `source_xpath` (required): XPath to extract from the source URL
+- `action` (optional, default: `"replace_content"`): How to replace content
+  - `replace_content`: Replace element's content with source content
+  - `replace_element`: Replace entire element with source element
+  - `insert_before`: Insert source before target element
+  - `insert_after`: Insert source after target element
+- `timeout` (optional, default: `10`): Request timeout in seconds
+
+**Examples:**
+```yaml
+post_hooks:
+  # Fetch WordPress article and insert into page
+  - hostname: "example.com"
+    url_pattern: "/blog/*"
+    hook: "xpath_replace_from_url"
+    params:
+      target_xpath: '//div[@id="article-content"]'
+      source_url: 'https://wordpress-blog.example.com/article/123'
+      source_xpath: '//article[@class="post-content"]'
+      action: "replace_content"
+      timeout: 10
+
+  # Insert external banner before main content
+  - hostname: "example.com"
+    url_pattern: "/products/*"
+    hook: "xpath_replace_from_url"
+    params:
+      target_xpath: '//main'
+      source_url: 'https://api.example.com/banner/promo'
+      source_xpath: '//div[@class="banner"]'
+      action: "insert_before"
+      timeout: 5
+
+  # Replace entire news section with external content
+  - hostname: "example.com"
+    url_pattern: "/news"
+    hook: "xpath_replace_from_url"
+    params:
+      target_xpath: '//section[@id="latest-news"]'
+      source_url: 'https://news-api.example.com/latest'
+      source_xpath: '//div[@class="news-feed"]'
+      action: "replace_element"
 ```
 
 ## Complete Example

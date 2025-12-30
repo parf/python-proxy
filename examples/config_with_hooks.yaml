@@ -65,6 +65,30 @@ hook_mappings:
       params:
         message: "API v0 is no longer supported. Please use v2."
 
+    # Static HTML - return maintenance page without backend
+    - hostname: "example.com"
+      url_pattern: "/maintenance"
+      hook: "static_html"
+      params:
+        html: |
+          <!DOCTYPE html>
+          <html>
+          <head><title>Maintenance Mode</title></head>
+          <body>
+            <h1>Site Under Maintenance</h1>
+            <p>We'll be back soon!</p>
+          </body>
+          </html>
+        status: 503
+
+    # Static HTML from file
+    - hostname: "example.com"
+      url_pattern: "/custom-page"
+      hook: "static_html"
+      params:
+        file: "/path/to/custom-page.html"
+        status: 200
+
   # ============================================================================
   # POST-HOOKS (execute after receiving response, modify content)
   # ============================================================================
@@ -104,6 +128,23 @@ hook_mappings:
         pattern: '\d{3}-\d{3}-\d{4}'
         replacement: "XXX-XXX-XXXX"
         content_types: ["text/html"]
+
+    # Link Rewrite - add .local suffix to all realmo.com links
+    - hostname: "realmo.com.local"
+      url_pattern: "/*"
+      hook: "link_rewrite"
+      params:
+        from_domain: "realmo.com"
+        to_domain: "realmo.com.local"
+
+    # Link Rewrite - replace domain in all links
+    - hostname: "example.com"
+      url_pattern: "/migrate/*"
+      hook: "link_rewrite"
+      params:
+        from_domain: "old-cdn.com"
+        to_domain: "new-cdn.com"
+        attributes: ["href", "src", "action", "data", "poster"]
 
     # HTML Rewrite - change page title
     - hostname: "example.com"
@@ -149,6 +190,38 @@ hook_mappings:
         xpath: "//body"
         action: "insert_after"
         value: '<div class="footer">Custom Footer</div>'
+
+    # XPath Replace from URL - fetch WordPress article and insert into page
+    - hostname: "example.com"
+      url_pattern: "/blog/*"
+      hook: "xpath_replace_from_url"
+      params:
+        target_xpath: '//div[@id="article-content"]'
+        source_url: 'https://wordpress-blog.example.com/wp-json/wp/v2/posts/123'
+        source_xpath: '//article[@class="post-content"]'
+        action: "replace_content"
+        timeout: 10
+
+    # XPath Replace from URL - insert external banner
+    - hostname: "example.com"
+      url_pattern: "/products/*"
+      hook: "xpath_replace_from_url"
+      params:
+        target_xpath: '//main'
+        source_url: 'https://api.example.com/banner/promo'
+        source_xpath: '//div[@class="banner"]'
+        action: "insert_before"
+        timeout: 5
+
+    # XPath Replace from URL - replace entire element with external content
+    - hostname: "example.com"
+      url_pattern: "/news"
+      hook: "xpath_replace_from_url"
+      params:
+        target_xpath: '//section[@id="latest-news"]'
+        source_url: 'https://news-api.example.com/latest'
+        source_xpath: '//div[@class="news-feed"]'
+        action: "replace_element"
 
 # Pattern Matching Examples:
 # ============================================================================
