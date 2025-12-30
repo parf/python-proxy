@@ -196,8 +196,9 @@ hook_mappings:
 - URL patterns with glob (`/api/*`) or regex (`regex:^/api/v[0-9]+/`)
 - Pre-hooks can skip backend calls (redirects, errors)
 - Post-hooks modify content (HTML, text, JSON)
+- **Organize hooks with includes**: Separate hooks by hostname into dedicated files for better organization
 
-See [examples/HOOKS.md](examples/HOOKS.md) for complete documentation and [examples/config_with_hooks.yaml](examples/config_with_hooks.yaml) for a working example.
+See [examples/HOOKS.md](examples/HOOKS.md) for complete documentation, [examples/config_with_hooks.yaml](examples/config_with_hooks.yaml) for inline hooks, and [examples/config_with_includes.yaml](examples/config_with_includes.yaml) for include examples.
 
 ### Nginx Integration
 

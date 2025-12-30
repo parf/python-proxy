@@ -1,0 +1,44 @@
+# Pre-hooks for example.com
+# Note: hostname is automatically set to "example.com" by the include mechanism
+# You only need to specify url_pattern, hook, and params
+
+# Redirect old URLs
+- url_pattern: "/old-page"
+  hook: "redirect_301"
+  params:
+    location: "https://example.com/new-page"
+    preserve_query: true
+
+- url_pattern: "/old-blog/*"
+  hook: "redirect_301"
+  params:
+    location: "https://example.com/blog/"
+    preserve_query: false
+
+# Mark deprecated content as gone
+- url_pattern: "/deprecated/*"
+  hook: "gone_410"
+  params:
+    message: "This content has been permanently removed"
+
+# Block admin paths
+- url_pattern: "/admin/*"
+  hook: "not_found_404"
+  params:
+    message: "Access denied"
+    html: true
+
+# Serve maintenance page for specific path
+- url_pattern: "/under-construction"
+  hook: "static_html"
+  params:
+    html: |
+      <!DOCTYPE html>
+      <html>
+      <head><title>Under Construction</title></head>
+      <body>
+        <h1>Page Under Construction</h1>
+        <p>This page is currently being updated.</p>
+      </body>
+      </html>
+    status: 503

@@ -1,0 +1,39 @@
+# Post-hooks for example.com
+# Note: hostname is automatically set to "example.com" by the include mechanism
+
+# Rewrite company name across all pages
+- url_pattern: "/*"
+  hook: "text_rewrite"
+  params:
+    pattern: "OldCompanyName"
+    replacement: "NewCompanyName"
+    flags: "IGNORECASE"
+
+# Rewrite links to add .local suffix (for local development)
+- url_pattern: "/*"
+  hook: "link_rewrite"
+  params:
+    from_domain: "example.com"
+    to_domain: "example.com.local"
+
+# Remove tracking scripts
+- url_pattern: "/*.html"
+  hook: "html_rewrite"
+  params:
+    xpath: '//script[contains(@src, "analytics")]'
+    action: "remove"
+
+# Change page title
+- url_pattern: "/index.html"
+  hook: "html_rewrite"
+  params:
+    xpath: "//title"
+    action: "set_text"
+    value: "Welcome to Example.com"
+
+# Redact phone numbers
+- url_pattern: "/contact"
+  hook: "text_rewrite"
+  params:
+    pattern: '\d{3}-\d{3}-\d{4}'
+    replacement: "XXX-XXX-XXXX"

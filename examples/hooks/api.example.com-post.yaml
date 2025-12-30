@@ -1,0 +1,25 @@
+# Post-hooks for api.example.com
+# Note: hostname is automatically set to "api.example.com"
+
+# Rewrite REST-style URLs to query parameters
+- url_pattern: "/v2/users/*"
+  hook: "url_rewrite"
+  params:
+    pattern: '"/v2/users/([^/"]+)"'
+    replacement: '"/v2/users?id=$1"'
+    content_types: ["application/json", "text/html"]
+
+# Rewrite nested resource URLs
+- url_pattern: "/v2/posts/*/comments/*"
+  hook: "url_rewrite"
+  params:
+    pattern: '"/v2/posts/([^/"]+)/comments/([^/"]+)"'
+    replacement: '"/v2/posts?post_id=$1&comment_id=$2"'
+
+# Replace API domain in responses (for testing)
+- url_pattern: "/v2/*"
+  hook: "text_rewrite"
+  params:
+    pattern: "api.production.com"
+    replacement: "api.example.com"
+    content_types: ["application/json", "text/html"]

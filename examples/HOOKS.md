@@ -34,6 +34,123 @@ hook_mappings:
         replacement: '"/api/users?id=$1"'
 ```
 
+## Organizing Hooks with Includes
+
+For better organization, especially when managing many hooks for a single hostname, you can separate hooks into dedicated files using the `include` directive.
+
+### Include Syntax
+
+```yaml
+hook_mappings:
+  pre_hooks:
+    - hostname: "example.com"
+      include: "hooks/example.com-pre.yaml"
+
+  post_hooks:
+    - hostname: "example.com"
+      include: "hooks/example.com-post.yaml"
+```
+
+### Include File Format
+
+In the included file, you only need to specify the hook details (no `hostname` field required):
+
+**hooks/example.com-pre.yaml:**
+```yaml
+- url_pattern: "/old-page"
+  hook: "redirect_301"
+  params:
+    location: "/new-page"
+
+- url_pattern: "/deleted/*"
+  hook: "gone_410"
+  params:
+    message: "Content removed"
+```
+
+The `hostname` is automatically added to each hook from the include directive.
+
+### Include Features
+
+- **Relative paths**: Resolved relative to the config file directory
+- **Absolute paths**: Fully qualified paths also supported
+- **Mixed mode**: Combine includes with inline hooks
+- **Automatic hostname**: Hostname from include directive is added to all hooks
+- **Override hostname**: Hooks can specify their own hostname if needed
+- **Error handling**: Missing files log errors but don't stop config loading
+
+### Complete Include Example
+
+**config.yaml:**
+```yaml
+host: "0.0.0.0"
+port: 8080
+
+hook_mappings:
+  pre_hooks:
+    # Include organized hooks from separate files
+    - hostname: "example.com"
+      include: "hooks/example.com-pre.yaml"
+
+    - hostname: "api.example.com"
+      include: "hooks/api.example.com-pre.yaml"
+
+    # Mix with inline hooks
+    - hostname: "other.com"
+      url_pattern: "/maintenance"
+      hook: "static_html"
+      params:
+        html: "<h1>Maintenance Mode</h1>"
+        status: 503
+
+  post_hooks:
+    - hostname: "example.com"
+      include: "hooks/example.com-post.yaml"
+
+    - hostname: "api.example.com"
+      include: "hooks/api.example.com-post.yaml"
+```
+
+**hooks/example.com-pre.yaml:**
+```yaml
+# Redirects for example.com
+- url_pattern: "/old-page"
+  hook: "redirect_301"
+  params:
+    location: "/new-page"
+
+- url_pattern: "/old-blog/*"
+  hook: "redirect_301"
+  params:
+    location: "/blog/"
+```
+
+**hooks/example.com-post.yaml:**
+```yaml
+# Content modifications for example.com
+- url_pattern: "/*"
+  hook: "text_rewrite"
+  params:
+    pattern: "OldBrand"
+    replacement: "NewBrand"
+
+- url_pattern: "/*"
+  hook: "link_rewrite"
+  params:
+    from_domain: "example.com"
+    to_domain: "example.com.local"
+```
+
+### Benefits of Using Includes
+
+1. **Better Organization**: Group hooks by hostname in separate files
+2. **Easier Maintenance**: Update hooks for a hostname in one place
+3. **Team Collaboration**: Different team members can manage different hostnames
+4. **Reusability**: Share common hook files across configurations
+5. **Cleaner Config**: Main config stays small and readable
+
+See [config_with_includes.yaml](config_with_includes.yaml) and the `hooks/` directory for a complete working example.
+
 ## Pattern Matching
 
 ### Hostname Patterns

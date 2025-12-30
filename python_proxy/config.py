@@ -1,10 +1,13 @@
 """Configuration handling for proxy server."""
 
+import logging
 import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import yaml
+
+logger = logging.getLogger(__name__)
 
 
 class Config:
@@ -40,6 +43,79 @@ class Config:
         self.hook_mappings = hook_mappings or {"pre_hooks": [], "post_hooks": []}
 
     @classmethod
+    def _process_hook_includes(
+        cls, hooks: List[Dict[str, Any]], config_dir: Path, hook_type: str
+    ) -> List[Dict[str, Any]]:
+        """Process include directives in hook configurations.
+
+        Args:
+            hooks: List of hook configurations
+            config_dir: Directory containing the main config file
+            hook_type: Type of hooks (pre_hooks or post_hooks) for logging
+
+        Returns:
+            Expanded list of hooks with includes resolved
+        """
+        expanded_hooks = []
+
+        for hook in hooks:
+            # Check if this is an include directive
+            if "include" in hook and "hostname" in hook:
+                hostname = hook["hostname"]
+                include_file = hook["include"]
+
+                # Resolve include path (relative to config file)
+                if not Path(include_file).is_absolute():
+                    include_path = config_dir / include_file
+                else:
+                    include_path = Path(include_file)
+
+                # Load included file
+                try:
+                    logger.info(
+                        f"Loading {hook_type} for hostname '{hostname}' from {include_path}"
+                    )
+                    with open(include_path) as f:
+                        included_hooks = yaml.safe_load(f)
+
+                    if not isinstance(included_hooks, list):
+                        logger.error(
+                            f"Include file {include_path} must contain a list of hooks"
+                        )
+                        continue
+
+                    # Add hostname to each hook from included file
+                    for included_hook in included_hooks:
+                        if not isinstance(included_hook, dict):
+                            logger.warning(
+                                f"Skipping invalid hook in {include_path}: {included_hook}"
+                            )
+                            continue
+
+                        # Add hostname if not already specified
+                        if "hostname" not in included_hook:
+                            included_hook["hostname"] = hostname
+                        expanded_hooks.append(included_hook)
+
+                    logger.info(
+                        f"Loaded {len(included_hooks)} {hook_type} for '{hostname}'"
+                    )
+
+                except FileNotFoundError:
+                    logger.error(
+                        f"Include file not found: {include_path} (referenced in {hook_type})"
+                    )
+                except yaml.YAMLError as e:
+                    logger.error(f"Error parsing include file {include_path}: {e}")
+                except Exception as e:
+                    logger.error(f"Error loading include file {include_path}: {e}")
+            else:
+                # Regular hook, add as-is
+                expanded_hooks.append(hook)
+
+        return expanded_hooks
+
+    @classmethod
     def from_file(cls, config_path: str) -> "Config":
         """Load configuration from YAML file.
 
@@ -53,8 +129,26 @@ class Config:
         if not path.exists():
             raise FileNotFoundError(f"Configuration file not found: {config_path}")
 
+        config_dir = path.parent
+
         with open(path) as f:
             data = yaml.safe_load(f) or {}
+
+        # Process includes in hook_mappings
+        if "hook_mappings" in data:
+            hook_mappings = data["hook_mappings"]
+
+            # Process pre_hooks includes
+            if "pre_hooks" in hook_mappings:
+                hook_mappings["pre_hooks"] = cls._process_hook_includes(
+                    hook_mappings["pre_hooks"], config_dir, "pre_hooks"
+                )
+
+            # Process post_hooks includes
+            if "post_hooks" in hook_mappings:
+                hook_mappings["post_hooks"] = cls._process_hook_includes(
+                    hook_mappings["post_hooks"], config_dir, "post_hooks"
+                )
 
         return cls(**data)
 

@@ -1,0 +1,42 @@
+# Example configuration demonstrating hostname-specific include files
+# This allows organizing hooks into separate files per hostname
+
+host: "0.0.0.0"
+port: 8080
+log_level: "INFO"
+
+hook_mappings:
+  pre_hooks:
+    # Include all pre-hooks for example.com from a separate file
+    - hostname: "example.com"
+      include: "hooks/example.com-pre.yaml"
+
+    # Include pre-hooks for api.example.com
+    - hostname: "api.example.com"
+      include: "hooks/api.example.com-pre.yaml"
+
+    # Regular inline hooks still work
+    - hostname: "*.other.com"
+      url_pattern: "/maintenance"
+      hook: "static_html"
+      params:
+        html: "<h1>Under Maintenance</h1>"
+        status: 503
+
+  post_hooks:
+    # Include all post-hooks for example.com from a separate file
+    - hostname: "example.com"
+      include: "hooks/example.com-post.yaml"
+
+    # Include post-hooks for api.example.com
+    - hostname: "api.example.com"
+      include: "hooks/api.example.com-post.yaml"
+
+    # Mix includes with regular hooks
+    - hostname: "*.test.com"
+      url_pattern: "/*"
+      hook: "text_rewrite"
+      params:
+        pattern: "Production"
+        replacement: "Test"
+        flags: "IGNORECASE"

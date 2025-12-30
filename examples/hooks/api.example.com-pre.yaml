@@ -1,0 +1,27 @@
+# Pre-hooks for api.example.com
+# Note: hostname is automatically set to "api.example.com"
+
+# Mark old API versions as gone
+- url_pattern: "regex:^/v0/.*"
+  hook: "gone_410"
+  params:
+    message: "API v0 is deprecated. Please use v2."
+
+- url_pattern: "/v1/*"
+  hook: "gone_410"
+  params:
+    message: "API v1 is deprecated. Please migrate to v2."
+
+# Return 404 for internal endpoints
+- url_pattern: "/internal/*"
+  hook: "not_found_404"
+  params:
+    message: "Not Found"
+
+# Serve API status page
+- url_pattern: "/status"
+  hook: "static_html"
+  params:
+    html: '{"status":"ok","version":"2.0"}'
+    status: 200
+    content_type: "application/json"
