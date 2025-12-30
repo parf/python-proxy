@@ -215,6 +215,8 @@ See [examples/NginxIntegration.md](examples/NginxIntegration.md) for complete ng
 
 For advanced use cases, you can write custom Python hooks. Place them in a hooks directory.
 
+**📚 New to hooks? Start here:** [Creating Custom Hooks - For Beginners](examples/CUSTOM_HOOKS_FOR_DUMMIES.md) - A complete step-by-step tutorial with real-world examples!
+
 ### Simple Hook Example
 
 Create a file `hooks/my_hooks.py`:
@@ -263,7 +265,10 @@ async def inject_script(response, body):
     return body
 ```
 
-See `examples/` directory for more hook examples.
+**Learn more:**
+- [Creating Custom Hooks - For Beginners](examples/CUSTOM_HOOKS_FOR_DUMMIES.md) - Complete tutorial
+- [HOOKS.md](examples/HOOKS.md) - Configuration-based hooks reference
+- `examples/` directory - More hook examples
 
 ## Configuration
 

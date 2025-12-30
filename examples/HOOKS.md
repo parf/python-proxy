@@ -811,6 +811,9 @@ This will show:
 
 ## See Also
 
+- **[CUSTOM_HOOKS_FOR_DUMMIES.md](CUSTOM_HOOKS_FOR_DUMMIES.md)** - Step-by-step tutorial for creating custom Python hooks (START HERE!)
 - [config_with_hooks.yaml](config_with_hooks.yaml) - Complete working example
-- [USAGE.md](USAGE.md) - General proxy usage guide
-- [Custom hooks guide](advanced_hooks.py) - Writing Python hooks
+- [config_with_includes.yaml](config_with_includes.yaml) - Example using hostname-specific includes
+- [json_hooks_example.yaml](json_hooks_example.yaml) - JSON manipulation examples
+- [NginxIntegration.md](NginxIntegration.md) - Using python-proxy with nginx
+- [../README.md](../README.md) - Main documentation
