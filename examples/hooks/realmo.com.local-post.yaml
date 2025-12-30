@@ -21,6 +21,8 @@
     # Rewrite in all these HTML attributes
     attributes: ["href", "src", "action", "data", "poster", "srcset"]
     case_sensitive: false
+    # Force HTTP for local proxy (converts https://realmo.com to http://realmo.com.local)
+    force_http: true
 
 # Optional: Add development banner (uncomment to enable)
 # - url_pattern: "/*.html"

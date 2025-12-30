@@ -461,6 +461,7 @@ async def link_rewrite(
         to_domain: Replacement domain (e.g., "realmo.com.local")
         attributes: List of attributes to rewrite (default: ["href", "src", "action", "data"])
         case_sensitive: Whether matching is case-sensitive (default: false)
+        force_http: Force all rewritten URLs to use HTTP instead of HTTPS (default: false)
 
     Example configs:
         # Add .local suffix for local testing
@@ -468,6 +469,13 @@ async def link_rewrite(
         params:
           from_domain: "realmo.com"
           to_domain: "realmo.com.local"
+
+        # Force HTTP for local proxy (converts https:// to http://)
+        hook: link_rewrite
+        params:
+          from_domain: "realmo.com"
+          to_domain: "realmo.com.local"
+          force_http: true
 
         # Replace domain completely
         hook: link_rewrite
@@ -491,6 +499,7 @@ async def link_rewrite(
     # Get attributes to rewrite
     attributes = params.get("attributes", ["href", "src", "action", "data"])
     case_sensitive = params.get("case_sensitive", False)
+    force_http = params.get("force_http", False)
 
     try:
         text = body.decode("utf-8", errors="ignore")
@@ -522,6 +531,10 @@ async def link_rewrite(
                 # Prepare replacement flags
                 flags = 0 if case_sensitive else re.IGNORECASE
 
+                # Determine target protocol
+                target_protocol_http = "http" if force_http else "http"
+                target_protocol_https = "http" if force_http else "https"
+
                 # Replace protocol-relative URLs
                 new_value = re.sub(
                     f"//({from_escaped})",
@@ -532,14 +545,14 @@ async def link_rewrite(
                 # Replace http URLs
                 new_value = re.sub(
                     f"http://({from_escaped})",
-                    f"http://{to_domain}",
+                    f"{target_protocol_http}://{to_domain}",
                     new_value,
                     flags=flags,
                 )
                 # Replace https URLs
                 new_value = re.sub(
                     f"https://({from_escaped})",
-                    f"https://{to_domain}",
+                    f"{target_protocol_https}://{to_domain}",
                     new_value,
                     flags=flags,
                 )

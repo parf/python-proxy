@@ -362,17 +362,19 @@ Rewrite domain names in all HTML links and resources (href, src, action, etc.). 
 - `to_domain` (required): Replacement domain (e.g., "realmo.com.local")
 - `attributes` (optional): List of attributes to rewrite (default: `["href", "src", "action", "data"]`)
 - `case_sensitive` (optional, default: `false`): Whether matching is case-sensitive
+- `force_http` (optional, default: `false`): Force all rewritten URLs to use HTTP instead of HTTPS (useful for local HTTP proxies)
 
 **Examples:**
 ```yaml
 post_hooks:
-  # Add .local suffix for local testing (perfect for your use case!)
+  # Add .local suffix for local testing with forced HTTP
   - hostname: "realmo.com.local"
     url_pattern: "/*"
     hook: "link_rewrite"
     params:
       from_domain: "realmo.com"
       to_domain: "realmo.com.local"
+      force_http: true  # Converts https://realmo.com to http://realmo.com.local
 
   # Replace CDN domain
   - hostname: "example.com"
