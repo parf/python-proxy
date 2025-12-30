@@ -1,0 +1,203 @@
+# Real-Life Example: realmo.com.local Configuration
+#
+# This configuration allows you to proxy realmo.com through your local machine
+# for testing and development purposes. All links to realmo.com will be
+# automatically rewritten to realmo.com.local so they continue to go through
+# the proxy.
+#
+# Setup:
+# 1. Add to /etc/hosts:
+#    127.0.0.1 realmo.com.local
+#
+# 2. Start proxy:
+#    python-proxy --config examples/realmo.com.local-example.yaml
+#
+# 3. Browse to:
+#    http://realmo.com.local
+#
+# The proxy will automatically:
+# - Strip .local suffix and route to realmo.com:80
+# - Rewrite all realmo.com links back to realmo.com.local
+# - Keep all traffic going through the proxy
+
+host: "0.0.0.0"
+port: 80  # Bind to port 80 for seamless local browsing
+log_level: "INFO"
+
+# No target_host needed - .local domain routing is automatic
+# realmo.com.local will automatically route to realmo.com:80
+
+hook_mappings:
+  # ============================================================================
+  # POST-HOOKS: Modify responses from realmo.com
+  # ============================================================================
+  post_hooks:
+    # CRITICAL: Rewrite all realmo.com links to realmo.com.local
+    # This ensures all links, images, scripts, etc. continue through the proxy
+    - hostname: "realmo.com.local"
+      url_pattern: "/*"
+      hook: "link_rewrite"
+      params:
+        from_domain: "realmo.com"
+        to_domain: "realmo.com.local"
+        # Rewrite in all these HTML attributes
+        attributes: ["href", "src", "action", "data", "poster", "srcset"]
+        case_sensitive: false
+
+    # Optional: Log all requests for debugging
+    # Uncomment to see what's being proxied
+    # - hostname: "realmo.com.local"
+    #   url_pattern: "/*"
+    #   hook: "text_rewrite"
+    #   params:
+    #     pattern: "</body>"
+    #     replacement: "<!-- Proxied through python-proxy --></body>"
+
+    # Optional: Add development banner
+    # Uncomment to add a visible indicator that you're on .local
+    # - hostname: "realmo.com.local"
+    #   url_pattern: "/*.html"
+    #   hook: "html_rewrite"
+    #   params:
+    #     xpath: "//body"
+    #     action: "insert_before"
+    #     value: |
+    #       <div style="position: fixed; top: 0; left: 0; right: 0;
+    #                   background: #ff6b6b; color: white; padding: 5px;
+    #                   text-align: center; z-index: 999999; font-size: 14px;">
+    #         🔧 Development Mode - realmo.com.local
+    #       </div>
+
+    # Optional: Replace specific content for testing
+    # Example: Change pricing for local testing
+    # - hostname: "realmo.com.local"
+    #   url_pattern: "/pricing"
+    #   hook: "text_rewrite"
+    #   params:
+    #     pattern: '\$99'
+    #     replacement: '$0 (TEST PRICE)'
+    #     flags: "MULTILINE"
+
+    # Optional: Inject custom JavaScript for local development
+    # - hostname: "realmo.com.local"
+    #   url_pattern: "/*.html"
+    #   hook: "html_rewrite"
+    #   params:
+    #     xpath: "//head"
+    #     action: "insert_before"
+    #     value: |
+    #       <script>
+    #       console.log('Python-proxy active - realmo.com.local');
+    #       // Add any custom JavaScript here for local testing
+    #       </script>
+
+# ============================================================================
+# USAGE EXAMPLES
+# ============================================================================
+#
+# After starting the proxy, you can:
+#
+# 1. Browse normally:
+#    http://realmo.com.local
+#    http://realmo.com.local/products
+#    http://realmo.com.local/about
+#
+# 2. Use with curl:
+#    curl http://realmo.com.local
+#
+# 3. Configure browser proxy (optional):
+#    HTTP Proxy: localhost:80
+#    Then browse to: http://realmo.com
+#
+# 4. Test with /etc/hosts:
+#    # Add to /etc/hosts
+#    127.0.0.1 realmo.com.local
+#    127.0.0.1 www.realmo.com.local
+#    127.0.0.1 api.realmo.com.local
+#
+# ============================================================================
+# ADVANCED CONFIGURATION
+# ============================================================================
+#
+# Multiple subdomains:
+# If realmo.com has subdomains, add more hooks:
+#
+# - hostname: "api.realmo.com.local"
+#   url_pattern: "/*"
+#   hook: "link_rewrite"
+#   params:
+#     from_domain: "api.realmo.com"
+#     to_domain: "api.realmo.com.local"
+#
+# - hostname: "cdn.realmo.com.local"
+#   url_pattern: "/*"
+#   hook: "link_rewrite"
+#   params:
+#     from_domain: "cdn.realmo.com"
+#     to_domain: "cdn.realmo.com.local"
+#
+# ============================================================================
+# TROUBLESHOOTING
+# ============================================================================
+#
+# Issue: "Permission denied" on port 80
+# Solution: Run setup script or use sudo
+#   ./scripts/setup_port80.sh
+#   OR
+#   sudo python-proxy --config examples/realmo.com.local-example.yaml
+#
+# Issue: Links still point to realmo.com
+# Solution: Check that link_rewrite hook is active
+#   - Enable DEBUG logging to see hook execution
+#   - Check Content-Type is text/html
+#   - Verify hook matches hostname and URL pattern
+#
+# Issue: Page loads but looks broken
+# Solution: Check for CDN or asset domains
+#   - Add link_rewrite hooks for subdomains
+#   - Check browser console for 404s
+#   - Add those domains to /etc/hosts with .local suffix
+#
+# Issue: Infinite redirect loops
+# Solution: Check for HTTPS redirects
+#   - Proxy handles HTTP only
+#   - Some sites force HTTPS redirect
+#   - May need to disable HTTPS redirect on backend
+#
+# ============================================================================
+# NGINX INTEGRATION (Alternative)
+# ============================================================================
+#
+# If you prefer nginx frontend with python-proxy backend:
+#
+# nginx.conf:
+#   server {
+#       listen 80;
+#       server_name realmo.com.local;
+#
+#       location / {
+#           proxy_pass http://localhost:8080;
+#           proxy_set_header X-Proxy-Server realmo.com;
+#           proxy_set_header Host realmo.com.local;
+#           proxy_set_header X-Real-IP $remote_addr;
+#       }
+#   }
+#
+# Then start python-proxy on port 8080:
+#   python-proxy --config examples/realmo.com.local-example.yaml --port 8080
+#
+# ============================================================================
+# PRODUCTION NOTES
+# ============================================================================
+#
+# This configuration is designed for LOCAL DEVELOPMENT/TESTING only.
+#
+# For production use:
+# - Use nginx as frontend (see NginxIntegration.md)
+# - Add SSL/TLS termination
+# - Add rate limiting
+# - Add proper logging
+# - Use environment-specific configuration
+# - Consider security implications of link rewriting
+#
+# ============================================================================
