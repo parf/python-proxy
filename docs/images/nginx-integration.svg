@@ -39,9 +39,9 @@
   <text class="text-subtitle" x="425" y="120" text-anchor="middle">Hook Processing</text>
 
   <!-- Backend Box -->
-  <rect class="box" x="550" y="60" width="110" height="60"/>
-  <text class="text-title" x="605" y="85" text-anchor="middle">🖥️ Backend</text>
-  <text class="text-subtitle" x="605" y="105" text-anchor="middle">App Server</text>
+  <rect class="box" x="550" y="60" width="130" height="60"/>
+  <text class="text-title" x="615" y="85" text-anchor="middle">🖥️ Backend Servers</text>
+  <text class="text-subtitle" x="615" y="105" text-anchor="middle">App Servers</text>
 
   <!-- Forward Arrows -->
   <path class="arrow" d="M 125 85 L 165 85"/>
@@ -54,7 +54,7 @@
   <path class="arrow-back" d="M 165 95 L 125 95"/>
 
   <!-- Labels -->
-  <text class="text-subtitle" x="145" y="80" text-anchor="middle" fill="#27ae60" font-size="10">HTTPS</text>
+  <text class="text-subtitle" x="145" y="80" text-anchor="middle" fill="#16a085" font-size="11" font-weight="bold">🔒 HTTPS</text>
   <text class="text-subtitle" x="325" y="80" text-anchor="middle" fill="#27ae60" font-size="10">HTTP</text>
   <text class="text-subtitle" x="525" y="80" text-anchor="middle" fill="#27ae60" font-size="10">Proxied</text>
 </svg>

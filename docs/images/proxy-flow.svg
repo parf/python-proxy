@@ -35,10 +35,10 @@
   <text class="text-feature" x="330" y="155" text-anchor="middle">🔄 Route</text>
 
   <!-- Backend Box -->
-  <rect class="box" x="500" y="50" width="140" height="100"/>
-  <text class="text-title" x="570" y="85" text-anchor="middle">🖥️ Backend</text>
-  <text class="text-subtitle" x="570" y="105" text-anchor="middle">Target Server</text>
-  <text class="text-feature" x="570" y="125" text-anchor="middle">Returns Data</text>
+  <rect class="box" x="500" y="50" width="160" height="100"/>
+  <text class="text-title" x="580" y="85" text-anchor="middle">🖥️ Backend Servers</text>
+  <text class="text-subtitle" x="580" y="105" text-anchor="middle">Target Servers</text>
+  <text class="text-feature" x="580" y="125" text-anchor="middle">Returns Data</text>
 
   <!-- Forward Arrow: Client -> Proxy -->
   <path class="arrow" d="M 165 90 L 235 90"/>

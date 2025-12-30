@@ -6,7 +6,7 @@
 
 ![Python-Proxy Flow](docs/images/proxy-flow.svg)
 
-**nginx with superpowers** • **Zero-code configuration** • **Production-ready**
+**~ nginx with superpowers** • **Zero-code configuration** • **Production-ready**
 
 </div>
 
@@ -18,7 +18,7 @@
 
 ### 🎯 What Makes It Special?
 
-> 💡 **Think of it as nginx with superpowers**
+> 💡 **Think of it as ~ nginx with superpowers**
 > Get the reliability and performance of a production-grade proxy, combined with the flexibility to programmatically modify any aspect of HTTP traffic.
 
 **Common Use Cases:**
