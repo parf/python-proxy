@@ -592,22 +592,23 @@ async def link_rewrite(
             target_protocol_https = "http" if force_http else "https"
 
             # Replace protocol-relative URLs (avoiding http:// or https://)
+            # Handle both regular (//) and JSON-escaped (\\/ \\/) slashes
             new_script_text = re.sub(
-                f"(?<!:)//({from_escaped})(?![a-zA-Z0-9.-])",
+                f"(?<!:)(?:\\\\/\\\\/|//)({from_escaped})(?![a-zA-Z0-9.-])",
                 f"//{to_domain}",
                 new_script_text,
                 flags=flags,
             )
-            # Replace http URLs
+            # Replace http URLs (handle both :// and :\\/\\/)
             new_script_text = re.sub(
-                f"http://({from_escaped})(?![a-zA-Z0-9.-])",
+                f"http:(?:\\\\/\\\\/|//)({from_escaped})(?![a-zA-Z0-9.-])",
                 f"{target_protocol_http}://{to_domain}",
                 new_script_text,
                 flags=flags,
             )
-            # Replace https URLs
+            # Replace https URLs (handle both :// and :\\/\\/)
             new_script_text = re.sub(
-                f"https://({from_escaped})(?![a-zA-Z0-9.-])",
+                f"https:(?:\\\\/\\\\/|//)({from_escaped})(?![a-zA-Z0-9.-])",
                 f"{target_protocol_https}://{to_domain}",
                 new_script_text,
                 flags=flags,
