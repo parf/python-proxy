@@ -535,9 +535,6 @@ async def link_rewrite(
                 target_protocol_http = "http"  # HTTP stays HTTP
                 target_protocol_https = "http" if force_http else "https"
 
-                logger.debug(f"link_rewrite: force_http={force_http}, will convert https to {target_protocol_https}")
-                logger.debug(f"link_rewrite: original_value={original_value}")
-
                 # Replace protocol-relative URLs (use negative lookbehind to avoid matching http:// or https://)
                 new_value = re.sub(
                     f"(?<!:)//({from_escaped})(?![a-zA-Z0-9.-])",
@@ -553,21 +550,12 @@ async def link_rewrite(
                     flags=flags,
                 )
                 # Replace https URLs (use word boundary to avoid double replacement)
-                https_pattern = f"https://({from_escaped})(?![a-zA-Z0-9.-])"
-                https_replacement = f"{target_protocol_https}://{to_domain}"
-                logger.debug(f"link_rewrite HTTPS: BEFORE - new_value={new_value}")
-                logger.debug(f"link_rewrite HTTPS: pattern={https_pattern}, replacement={https_replacement}")
-                temp_result = re.sub(
-                    https_pattern,
-                    https_replacement,
+                new_value = re.sub(
+                    f"https://({from_escaped})(?![a-zA-Z0-9.-])",
+                    f"{target_protocol_https}://{to_domain}",
                     new_value,
                     flags=flags,
                 )
-                logger.debug(f"link_rewrite HTTPS: temp_result={temp_result}")
-                new_value = temp_result
-                logger.debug(f"link_rewrite HTTPS: AFTER - new_value={new_value}")
-
-                logger.debug(f"link_rewrite: new_value={new_value}")
 
                 if new_value != original_value:
                     element.set(attr, new_value)
